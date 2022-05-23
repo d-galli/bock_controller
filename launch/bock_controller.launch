@@ -1,0 +1,8 @@
+<launch>
+  <!-- change this next line to include the launch file for your robot's hardware drivers: -->
+  <node pkg="bock_controller" type="twist_to_motors.py" name="twist_to_motors" output="screen">
+    <rosparam param="base_width">0.644</rosparam>
+    <rosparam param="rate">10</rosparam>
+  </node>
+
+</launch>

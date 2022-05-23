@@ -14,3 +14,5 @@ float64 state_of_charge
 
 bool running_read
 bool running_write
+
+bool operating
