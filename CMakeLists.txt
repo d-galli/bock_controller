@@ -12,13 +12,26 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  message_generation
 )
 
-catkin_package()
+add_message_files(
+  FILES
+  BockStatus.msg
+)
+
+generate_messages(
+    DEPENDENCIES
+    std_msgs
+  )
+
+catkin_package(
+  CATKIN_DEPENDS message_runtime
+  )
 
 include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(bock_controller_node src/cmdVel.cpp)
+add_executable(bock_controller_node src/utils/cmdVel.cpp)
 target_link_libraries(bock_controller_node ${catkin_LIBRARIES})
