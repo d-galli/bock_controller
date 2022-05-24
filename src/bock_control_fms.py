@@ -6,7 +6,7 @@
 # Author(s) [email]:			Davide Galli [dgalli@unibz.it]
 # Revisor(s) {Date}:        	
 # Organization/Institution:	Free Univerisity of Bozen/Bolzano
-# Status:                       Work in progress
+# Status:                       To be tested
 
 #.............................................About wildlife_odom.py.....................................................
 # This node contains the Finite State Machine which manages the Mattro Bock operation.
@@ -19,6 +19,7 @@ import rospy
 import can
 from can import Message
 from msg import BockStatus
+from threading import Thread
 #...........................................End of Included Libraries and Message Types..................................
 
 #.........................................................Global Variables...............................................
@@ -38,6 +39,8 @@ state_of_charge = 0.0
 
 running_read = False
 running_write = False
+
+result = None
 #.....................................................End of Global Variables............................................
 
 #......................................................Callback Functions ...............................................   
@@ -65,7 +68,11 @@ def StatusCallback(data):
 #...................................................End of Callback Functions ...........................................
 
 #...................................................User-defined Functions ..............................................
-    
+def update_operating_status(status_msg):
+    while result is None:
+        status_msg.operate = True
+        pub1.publish(status_msg)
+
 #.............................................End of User-defined Functions .............................................
 
 #.................................................Finite State Machine...................................................
@@ -73,6 +80,7 @@ def Bock_FMS():
     # Import all the global variables
     global speed_left_target, speed_right_target, gear_target, speed_left, speed_right, state_of_activation
     global random_number, shift_value, activation_code, gear, state_of_charge, running_read, running_write
+    global result
     
     # Initilise the Finite State Machine
     state = 0
@@ -127,13 +135,17 @@ def Bock_FMS():
             
             if state == 3:
                 rospy.loginfo("State: operate")
+                                
+                t = Thread(target = update_operating_status(status_msg))
+                t.start()
+                result = raw_input("Press a key to disconnect")
+                
                 state = 4
             
             if state == 4:
                 rospy.loginfo("State: Disconnect")
                 print("Disconnecting from the Bock...")
-                
-        
+                        
                 # Set the speed to zero
                 status_msg.speed_left_target = 0
                 status_msg.speed_right_target = 0

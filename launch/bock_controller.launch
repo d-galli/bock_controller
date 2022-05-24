@@ -3,6 +3,17 @@
   <node pkg="bock_controller" type="twist_to_motors.py" name="twist_to_motors" output="screen">
     <rosparam param="base_width">0.644</rosparam>
     <rosparam param="rate">10</rosparam>
-  </node>
+    <rosparam param="Kp">10</rosparam>
+    <rosparam param="Ki">10</rosparam>
+    <rosparam param="Kd">0.001</rosparam>
+    <rosparam param="out_min">-5</rosparam>
+    <rosparam param="out_max">5</rosparam>
+    <rosparam param="rolling_pts">2</rosparam>
+    <rosparam param="timeout_ticks">4</rosparam>
+    <rosparam param="vel_threshold">0.001</rosparam>
+    <rosparam param="encoder_min">-32768</rosparam>
+    <rosparam param="encoder_max">32768</rosparam>
+    <rosparam param="wheel_low_wrap">-255</rosparam>
+    <rosparam param="wheel_high_wrap">-255</rosparam>
 
 </launch>
