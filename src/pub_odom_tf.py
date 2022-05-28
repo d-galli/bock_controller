@@ -33,33 +33,61 @@ from tf.broadcaster import TransformBroadcaster
 #...........................................End of Included Libraries and Message Types..................................
 
 #.........................................................Global Variables...............................................
-operating = False
+speed_left_target = 0.0
+speed_right_target = 0.0
+gear_target = 0
 
 speed_left = 0.0
 speed_right = 0.0
+    
+state_of_activation = 0
+random_number = 0.0
+shift_value = 0
+activation_code = 0
+gear = 0
+state_of_charge = 0.0
+
+state = 0
 #.....................................................End of Global Variables............................................
 
 #......................................................Callback Functions ...............................................   
 def BockStatusCallback(status_msg):
-    global operating, speed_left, speed_right
-    
-    operating = status_msg.operating
+    global speed_left_target, speed_right_target, gear_target, speed_left, speed_right, state_of_activation, speed_right
+    global random_number, shift_value, activation_code, gear, state_of_charge, state
+
+    speed_left_target = status_msg.speed_left_target
+    speed_right_target = status_msg.speed_right_target
+    gear_target = status_msg.gear_target
 
     speed_left = status_msg.speed_left
     speed_right = status_msg.speed_right
+        
+    state_of_activation = status_msg.state_of_activation
+    random_number = status_msg.random_number
+    shift_value = status_msg.shift_value
+    activation_code = status_msg.activation_code
+    gear = status_msg.gear
+    state_of_charge = status_msg.state_of_charge
+
+    state = status_msg.state
 #...................................................End of Callback Functions ...........................................
  
 #...................................................User-defined Functions ..............................................
-def update_odom(t_next, then):
-    global operating, speed_left, speed_right
+def update_odom(t_next, then, wheel_distance, base_frame_id, odom_frame_id):
+    global speed_left, speed_right
     
     odomBroadcaster = TransformBroadcaster()
-    
-    x = 0                  # position in xy plane 
+    odom_msg = Odometry()
+    quaternion = Quaternion()
+
+    # Starting position in xy plane 
+    x = 0                  
     y = 0
     z = 0
     theta = 0  
-    dx = 0                 # speeds in x/rotation
+
+    # Starting speeds in x/rotation
+    dx = 0                 
     dr = 0
 
     while not rospy.is_shutdown():
@@ -69,62 +97,41 @@ def update_odom(t_next, then):
             then = now
             elapsed = elapsed.to_sec()
             
-            # calculate odometry
-            if self.enc_left == None:
-                d_left = 0
-                d_right = 0
-            else:
-                d_left = (self.left - self.enc_left) / self.ticks_meter
-                d_right = (self.right - self.enc_right) / self.ticks_meter
-            self.enc_left = self.left
-            self.enc_right = self.right
-           
-            # distance traveled is the average of the two wheels 
-            d = ( d_left + d_right ) / 2
-            # this approximation works (in radians) for small angles
-            th = ( d_right - d_left ) / self.base_width
-            # calculate velocities
-            self.dx = d / elapsed
-            self.dr = th / elapsed
-           
-             
-            if (d != 0):
-                # calculate distance traveled in x and y
-                x = cos( th ) * d
-                y = -sin( th ) * d
-                # calculate the final position of the robot
-                self.x = self.x + ( cos( self.th ) * x - sin( self.th ) * y )
-                self.y = self.y + ( sin( self.th ) * x + cos( self.th ) * y )
-            if( th != 0):
-                self.th = self.th + th
-                
-            # publish the odom information
-            quaternion = Quaternion()
+            # Calculate the speed
+            v_rx = ( speed_right + speed_left ) /2
+            v_ry = 0 # we have a non-holonomic constraint (for a holonomic robot, this is non-zero)
+            omega_r = ( speed_right - speed_left ) / wheel_distance # d denotes the distance between both wheels (track)
+
+            # Calculate the travelled distance
+            theta = theta + omega_r * elapsed
+            x = x + (v_rx * elapsed * cos(theta))
+            y = y + (v_rx * elapsed * sin(theta))
+            
+            # Compute the quaternion
             quaternion.x = 0.0
             quaternion.y = 0.0
-            quaternion.z = sin( self.th / 2 )
-            quaternion.w = cos( self.th / 2 )
-            self.odomBroadcaster.sendTransform(
-                (self.x, self.y, 0),
-                (quaternion.x, quaternion.y, quaternion.z, quaternion.w),
-                rospy.Time.now(),
-                self.base_frame_id,
-                self.odom_frame_id
-                )
+            quaternion.z = sin( theta / 2 )
+            quaternion.w = cos( theta / 2 )
+
+            # Publish the tf transformation
+            odomBroadcaster.sendTransform((x, y, z), (quaternion.x, quaternion.y, quaternion.z, quaternion.w), rospy.Time.now(), base_frame_id, odom_frame_id)
             
-            odom = Odometry()
-            odom.header.stamp = now
-            odom.header.frame_id = self.odom_frame_id
-            odom.pose.pose.position.x = self.x
-            odom.pose.pose.position.y = self.y
-            odom.pose.pose.position.z = 0
-            odom.pose.pose.orientation = quaternion
-            odom.child_frame_id = self.base_frame_id
-            odom.twist.twist.linear.x = self.dx
-            odom.twist.twist.linear.y = 0
-            odom.twist.twist.angular.z = self.dr
-            self.odomPub.publish(odom)
-            pub1.publish(status_msg)
+
+            odom_msg.header.stamp = now
+            odom_msg.header.frame_id = odom_frame_id
+            odom_msg.pose.pose.position.x = x
+            odom_msg.pose.pose.position.y = y
+            odom_msg.pose.pose.position.z = z
+            odom_msg.pose.pose.orientation = quaternion
+            odom_msg.child_frame_id = base_frame_id
+            odom_msg.twist.twist.linear.x = dx
+            odom_msg.twist.twist.linear.y = 0
+            odom_msg.twist.twist.angular.z = dr
+
+            pub1.publish(odom_msg)
+    
+    print("Node terminated")
+
     
 #.............................................End of User-defined Functions ..............................................
 
@@ -139,6 +146,7 @@ if __name__ == '__main__':
         loop_rate = rospy.Rate(nodeRate)      
         base_frame_id = rospy.get_param('~base_frame_id','base_link') # the name of the base frame of the robot
         odom_frame_id = rospy.get_param('~odom_frame_id', 'odom') # the name of the odometry reference frame
+        wheel_distance = rospy.get_param('~base_width',0.644) 
 
         # Define ROS publishers and Subscribers
         pub1 = rospy.Publisher("/mattro/odom", Odometry, queue_size=10)
@@ -147,7 +155,7 @@ if __name__ == '__main__':
         t_next = rospy.Time.now() + rospy.Duration(1.0/loop_rate)
         then = rospy.Time.now()
 
-        update_odom(t_next, then)
+        update_odom(t_next, then, wheel_distance, base_frame_id, odom_frame_id)
 
     except rospy.ROSInterruptException:
         rospy.loginfo("Node terminated")

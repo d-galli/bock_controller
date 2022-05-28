@@ -27,7 +27,7 @@ import threading
 class MattroBock:
     
     def __init__(self, channel = 'can0'):
-        self.bock_can = can.interface.Bus(channel = channel, bustype = 'socketcan_ctypes')
+        self.bock_can = can.interface.Bus(channel = channel, bustype = 'socketcan') #'socketcan_ctype'
         
         self.speed_left_target = 0
         self.speed_right_target = 0
@@ -53,7 +53,7 @@ class MattroBock:
     
     def connect(self):
         # Send request of activation
-        msg = Message(arbitration_id=0x195, data=[0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00], extended_id=False)
+        msg = Message(arbitration_id=0x195, data=[0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])#, extended_id=False)
         self.bock_can.send(msg)
         
         # Wait for "state_of_activation==2"
@@ -63,7 +63,7 @@ class MattroBock:
             pass
         
         # Send the activation message
-        msg = Message(arbitration_id=0x195, data=[0x02, 0x00, 0x00, self.activation_code, 0x00, 0x00, 0x00, 0x00], extended_id=False)
+        msg = Message(arbitration_id=0x195, data=[0x02, 0x00, 0x00, self.activation_code, 0x00, 0x00, 0x00, 0x00])#, extended_id=False)
         self.bock_can.send(msg)
         
         # Wait for "state_of_activation==3"
@@ -128,13 +128,13 @@ class MattroBock:
             speed_right_H = (int(abs(self.speed_right_target)*10)>>8)
             speed_right_L = (int(abs(self.speed_right_target)*10)) & 0xff
             
-            msg = Message(arbitration_id=0x295, data=[drivemode, speed_left_L, speed_left_H, speed_right_L, speed_right_H, self.gear_target, 0x00, 0x00], extended_id=False)
+            msg = Message(arbitration_id=0x295, data=[drivemode, speed_left_L, speed_left_H, speed_right_L, speed_right_H, self.gear_target, 0x00, 0x00])#, extended_id=False)
             self.bock_can.send(msg)
             
             time.sleep(0.005)
         
         # Send request of deactivation
-        msg = Message(arbitration_id=0x195, data=[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00], extended_id=False)
+        msg = Message(arbitration_id=0x195, data=[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])#, extended_id=False)
         self.bock_can.send(msg)
 
 
