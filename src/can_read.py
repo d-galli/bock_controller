@@ -40,6 +40,10 @@ def read_can():
     print("Node up and running")
     battery = 0
     current_gear = 0
+    activation_state = 0
+    code_activation = 0
+    s_left = 0.0
+    s_right = 0.0
     # Create a BockStatus message
     status_msg = BockStatus()
     
@@ -51,8 +55,12 @@ def read_can():
 
         # Parse the message
         if can_msg.arbitration_id == 0x215:
-            status_msg.state_of_activation = can_msg.data[0]
-            status_msg.activation_code = (can_msg.data[1]>>can_msg.data[2])
+            activation_state = can_msg.data[0]
+            status_msg.state_of_activation = activation_state
+            status_msg.random_number = can_msg.data[1]
+            status_msg.shift_value = can_msg.data[2]
+            code_activation = (can_msg.data[1]>>can_msg.data[2])
+            status_msg.activation_code = code_activation
             current_gear = can_msg.data[5]
             status_msg.gear = current_gear
             battery = ((can_msg.data[7]<<8) + can_msg.data[6])/10.
@@ -64,8 +72,8 @@ def read_can():
             s_right = (can_msg.data[7]<<24) + (can_msg.data[6]<<16) + (can_msg.data[5]<<8) + can_msg.data[4]
             status_msg.speed_right = s_right
 
-            print("Battery", battery, "% Right speed: ", s_right," Left speed: ", s_left, "Gear ", current_gear, end = "\r")
-        
+        print("Battery", battery, "% Right speed: ", s_right," Left speed: ", s_left, "Gear ", current_gear, "Current state: ", activation_state, "Code: ", code_activation,  end = "\r")
+        status_msg.running_read = True
         # Publish the ROS message
         pub1.publish(status_msg)
 
