@@ -20,9 +20,8 @@
 #                       messages over CAN
 #...........................................Included Libraries and Message Types.........................................
 import rospy
-import os
 import can
-from can import Message
+#from can import Message
 from bock_controller.msg import BockStatus
 #...........................................End of Included Libraries and Message Types..................................
  
@@ -31,12 +30,7 @@ def read_can():
     
     bock_can = can.interface.Bus(channel = 'can0', bustype = 'socketcan') #socketcan_ctypes
     print("Node up and running")
-    battery = 0
-    current_gear = 0
-    activation_state = 0
-    code_activation = 0
-    s_left = 0.0
-    s_right = 0.0
+
     # Create a BockStatus message
     status_msg = BockStatus()
     

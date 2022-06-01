@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-# Filename:                     bock_bridge.py
+# Filename:                     bock_write.py
 # Creation Date:                30/04/2022
-# Last Revision Date:           30/05/2022
+# Last Revision Date:           01/06/2022
 # Author(s) [email]:			Davide Galli [dgalli@unibz.it]
 # Revisor(s) {Date}:        	
 # Organization/Institution:	    Free Univerisity of Bozen/Bolzano
-# Status:                       Ready for testing
+# Status:                       Up and Running
 # Notes:
 
 #.............................................About can_write.py.....................................................
