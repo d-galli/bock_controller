@@ -25,13 +25,6 @@ import can
 from can import Message
 from bock_controller.msg import BockStatus
 #...........................................End of Included Libraries and Message Types..................................
-
-#.........................................................Global Variables...............................................
-#.....................................................End of Global Variables............................................
-
-#......................................................Callback Functions ...............................................   
-
-#...................................................End of Callback Functions ...........................................
  
 #...................................................User-defined Functions ..............................................
 def read_can():
@@ -52,28 +45,22 @@ def read_can():
         # Read a message from can bus
         can_msg = bock_can.recv()
 
-
         # Parse the message
         if can_msg.arbitration_id == 0x215:
-            activation_state = can_msg.data[0]
-            status_msg.state_of_activation = activation_state
+            status_msg.state_of_activation = can_msg.data[0]
             status_msg.random_number = can_msg.data[1]
             status_msg.shift_value = can_msg.data[2]
-            code_activation = (can_msg.data[1]>>can_msg.data[2])
-            status_msg.activation_code = code_activation
-            current_gear = can_msg.data[5]
-            status_msg.gear = current_gear
-            battery = ((can_msg.data[7]<<8) + can_msg.data[6])/10.
-            status_msg.state_of_charge = battery
+            status_msg.activation_code = (can_msg.data[1]>>can_msg.data[2])
+            status_msg.gear = can_msg.data[5]
+            status_msg.state_of_charge = ((can_msg.data[7]<<8) + can_msg.data[6])/10.
         
         elif can_msg.arbitration_id == 0x315:
-            s_left = (can_msg.data[3]<<24) + (can_msg.data[2]<<16) + (can_msg.data[1]<<8) + can_msg.data[0]
-            status_msg.speed_left = s_left
-            s_right = (can_msg.data[7]<<24) + (can_msg.data[6]<<16) + (can_msg.data[5]<<8) + can_msg.data[4]
-            status_msg.speed_right = s_right
+            status_msg.speed_left = (can_msg.data[3]<<24) + (can_msg.data[2]<<16) + (can_msg.data[1]<<8) + can_msg.data[0]
+            status_msg.speed_right = (can_msg.data[7]<<24) + (can_msg.data[6]<<16) + (can_msg.data[5]<<8) + can_msg.data[4]
 
-        print("Battery", battery, "% Right speed: ", s_right," Left speed: ", s_left, "Gear ", current_gear, "Current state: ", activation_state, "Code: ", code_activation,  end = "\r")
         status_msg.running_read = True
+        status_msg.state = 3
+
         # Publish the ROS message
         pub1.publish(status_msg)
 

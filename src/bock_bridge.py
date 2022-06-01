@@ -20,7 +20,7 @@
 import rospy
 
 from bock_controller.msg import BockStatus
-from bock_controller.src.utils import mattro_bock
+from utils import mattro_bock
 #...........................................End of Included Libraries and Message Types..................................
 
 #.........................................................Global Variables...............................................
@@ -28,51 +28,25 @@ speed_left_target = 0.0
 speed_right_target = 0.0
 gear_target = 0
 
-speed_left = 0.0
-speed_right = 0.0
-    
-state_of_activation = 0
-random_number = 0.0
-shift_value = 0
-activation_code = 0
-gear = 0
-state_of_charge = 0.0
-
 state = 0
-
-reading = False
 #.....................................................End of Global Variables............................................
 
 #......................................................Callback Functions ...............................................   
 def BockStatusCallback(status_msg):
-    global speed_left_target, speed_right_target, gear_target, speed_left, speed_right, state_of_activation, speed_right
-    global random_number, shift_value, activation_code, gear, state_of_charge, state, reading
+    global speed_left_target, speed_right_target, gear_target, state
 
     speed_left_target = status_msg.speed_left_target
     speed_right_target = status_msg.speed_right_target
     gear_target = status_msg.gear_target
 
-    speed_left = status_msg.speed_left
-    speed_right = status_msg.speed_right
-        
-    state_of_activation = status_msg.state_of_activation
-    random_number = status_msg.random_number
-    shift_value = status_msg.shift_value
-    activation_code = status_msg.activation_code
-    gear = status_msg.gear
-    state_of_charge = status_msg.state_of_charge
-
     state = status_msg.state
-
-    reading = status_msg.running_read
-    
 #...................................................End of Callback Functions ...........................................
  
 #...................................................User-defined Functions ..............................................
 def bock_control():
-    global speed_left_target, speed_right_target, gear_target, speed_left, speed_right, state_of_activation, speed_right
-    global random_number, shift_value, activation_code, gear, state_of_charge, state, reading
+    global speed_left_target, speed_right_target, gear_target, state
 
+    loop_rate = rospy.Rate(10)
     bock = mattro_bock.MattroBock()
     # Connect to the robot
     print("Connecting to the Bock...")
@@ -84,7 +58,7 @@ def bock_control():
         bock.gear_target = 1
         bock.speed_left_target = speed_left_target
         bock.speed_right_target = speed_right_target
-        rospy.sleep()
+        loop_rate.sleep()
     
     # Stop the bock
     bock.speed_left_target = 0
@@ -104,12 +78,9 @@ if __name__ == '__main__':
     try:
         print("Try running node")
         rospy.init_node('bock_bridge', anonymous=True)
-        loop_rate = rospy.Rate(nodeRate)
-
         # Define ROS publishers and Subscribers
         sub1 = rospy.Subscriber("/mattro/bock_status", BockStatus, BockStatusCallback)
         
-       
         bock_control()
 
     except rospy.ROSInterruptException:
