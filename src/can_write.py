@@ -52,6 +52,7 @@ def bock_control():
     print("Connecting to the Bock...")
     bock.connect()
     print("Bock connected")
+    print("CanWriteNode: up and running")
 
     while not rospy.is_shutdown():
         # Set the speed

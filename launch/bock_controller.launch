@@ -1,10 +1,19 @@
 <launch>
-    <!-- change this next line to include the launch file for your robot's hardware drivers: -->
+    <!-- This is the format for a comment in HTML --> 
+
+
+    <!-- Run the node which convert Twist messages to target wheel speeds -->
     <node pkg="bock_controller" type="twist_to_motors.py" name="twist_to_motors" output="screen">
         <rosparam param="base_width">0.644</rosparam>
         <rosparam param="rate">10</rosparam>
     </node>
 
-    <node pkg="bock_controller" type="test_publisher.py" name="TestCmdVel" output="screen"/>
+    <!-- Run the node which publish bock_status messages -->
+    <node pkg="bock_controller" type="can_read.py" name="CanRead" output="screen"/>
+
+    <!-- Run the node which publish over CAN the target wheel speeds -->
+    <node pkg="bock_controller" type="can_write.py" name="CanWrite" output="screen"/>
+
+    <!node pkg="bock_controller" type="test_publisher.py" name="TestCmdVel" output="screen"/>
 
 </launch>

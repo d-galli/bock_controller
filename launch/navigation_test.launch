@@ -1,0 +1,13 @@
+<launch>
+    <!-- This is the format for a comment in HTML --> 
+
+
+    <!-- Run the node which convert Twist messages to target wheel speeds -->
+    <node pkg="bock_controller" type="twist_to_motors.py" name="twist_to_motors" output="screen">
+        <rosparam param="base_width">0.644</rosparam>
+        <rosparam param="rate">10</rosparam>
+    </node>
+
+    <node pkg="bock_controller" type="test_publisher.py" name="TestCmdVel" output="screen"/>
+
+</launch>

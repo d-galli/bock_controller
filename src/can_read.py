@@ -29,7 +29,7 @@ from bock_controller.msg import BockStatus
 def read_can():
     
     bock_can = can.interface.Bus(channel = 'can0', bustype = 'socketcan') #socketcan_ctypes
-    print("Node up and running")
+    print("CanReadNode: up and running")
 
     # Create a BockStatus message
     status_msg = BockStatus()
