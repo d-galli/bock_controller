@@ -23,7 +23,7 @@ def talker():
     while not rospy.is_shutdown():
         for i in range(20):
             if i < 10:
-                msg.linear.x = 0.01
+                msg.linear.x = 0.1
                 msg.linear.y = 0.0
                 msg.linear.z = 0.0
 
@@ -31,7 +31,7 @@ def talker():
                 msg.angular.y = 0.0
                 msg.angular.z = 0.0
             else:
-                msg.linear.x = -0.01
+                msg.linear.x = -0.1
                 msg.linear.y = 0.0
                 msg.linear.z = 0.0
 
