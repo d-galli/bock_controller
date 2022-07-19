@@ -23,24 +23,15 @@ import numpy as np
 
 #.........................................................Global Variables...............................................
 dx = 0.0
-dy = 0.0
 dr = 0.0
-
-state = 0
 #.....................................................End of Global Variables............................................
 
 #......................................................Callback Functions ...............................................   
 def TwistCallback(msg): # Read data form /mattro/cmd_vel
-    global dx, dy, dr
-    
-    dx = msg.linear.x
-    dy = msg.linear.y
-    dr = msg.angular.z
+    global dx, dr
 
-#def BockStatusCallback(status_msg):
-#    global state
-#    
-#    state = status_msg.state
+    dx = msg.linear.x
+    dr = msg.angular.z
 #...................................................End of Callback Functions ...........................................
  
 #...................................................User-defined Functions ..............................................
@@ -95,7 +86,7 @@ def compute_rpm_percentage(velocity):
     return remap_percentage(rpm)
 
 def motor_spin(loop_rate, wheel_space):
-    global dx, dy, dr, operating, speed_left, speed_right, state
+    global dx, dr
     
     print("TwistToMotorNode: up and running")
 
@@ -105,7 +96,7 @@ def motor_spin(loop_rate, wheel_space):
     while not rospy.is_shutdown():# and state == 3:
 
         # Compute the righ and left track speeds
-        
+
         status_msg.speed_right_target = compute_rpm_percentage(1.0 * dx + dr * wheel_space / 2)
         status_msg.speed_left_target = compute_rpm_percentage(1.0 * dx - dr * wheel_space / 2)
         status_msg.gear_target = 1

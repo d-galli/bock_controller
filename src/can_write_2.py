@@ -32,27 +32,25 @@ speed_right_target = 0.0
 gear_target = 0
 
 dx = 0.0
-dy = 0.0
 dr = 0.0
 
 state = 0
 #.....................................................End of Global Variables............................................
 
 #......................................................Callback Functions ...............................................   
-def BockStatusCallback(status_msg):
-    global speed_left_target, speed_right_target, gear_target, state
+#def BockStatusCallback(status_msg):
+#    global speed_left_target, speed_right_target, gear_target, state
 
-    speed_left_target = status_msg.speed_left_target
-    speed_right_target = status_msg.speed_right_target
-    gear_target = status_msg.gear_target
+    #speed_left_target = status_msg.speed_left_target
+    #speed_right_target = status_msg.speed_right_target
+    #gear_target = status_msg.gear_target
 
-    state = status_msg.state
+    #state = status_msg.state
 
 def TwistCallback(msg): # Read data form /mattro/cmd_vel
-    global dx, dy, dr
+    global dx, dr
     
     dx = msg.linear.x
-    dy = msg.linear.y
     dr = msg.angular.z
 #...................................................End of Callback Functions ...........................................
  
@@ -109,7 +107,7 @@ def compute_rpm_percentage(velocity):
     return remap_percentage(rpm)
 
 def bock_control(loop_rate, wheel_space):
-    global dx, dy, dr, speed_left, speed_right, state, gear_target
+    global dx, dr
 
     bock = mattro_bock.MattroBock()
     # Connect to the robot
@@ -145,7 +143,7 @@ if __name__ == '__main__':
         wheel_space = rospy.get_param("~base_width", 0.644)
 
         # Define ROS publishers and Subscribers
-        sub1 = rospy.Subscriber("/mattro/bock_status", BockStatus, BockStatusCallback)
+        #sub1 = rospy.Subscriber("/mattro/bock_status", BockStatus, BockStatusCallback)
         sub2 = rospy.Subscriber("/mattro/cmd_vel", Twist, TwistCallback)
         
         bock_control(loop_rate, wheel_space)
