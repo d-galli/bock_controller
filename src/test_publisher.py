@@ -22,13 +22,13 @@ def talker():
     print("TestPubNode: up and running")
     while not rospy.is_shutdown():
 
-        msg.linear.x = 0.0
+        msg.linear.x = 0.001
         msg.linear.y = 0.0
         msg.linear.z = 0.0
 
         msg.angular.x = 0.0
         msg.angular.y = 0.0
-        msg.angular.z = 0.001
+        msg.angular.z = 0.0
 
         pub.publish(msg)
         rate.sleep()

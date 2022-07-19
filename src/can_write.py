@@ -62,8 +62,8 @@ def bock_control():
         loop_rate.sleep()
     
     # Stop the bock
-    bock.speed_left_target = 0
-    bock.speed_right_target = 0
+    #bock.speed_left_target = 0
+    #bock.speed_right_target = 0
 
 
     # Disconnect from the bock

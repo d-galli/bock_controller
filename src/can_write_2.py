@@ -1,27 +1,36 @@
 #!/usr/bin/env python3
 
-# Filename:                     twist_to_motors.py
-# Creation Date:                23/04/2022
+# Filename:                     bock_write.py
+# Creation Date:                30/04/2022
 # Last Revision Date:           01/06/2022
 # Author(s) [email]:			Davide Galli [dgalli@unibz.it]
 # Revisor(s) {Date}:        	
 # Organization/Institution:	    Free Univerisity of Bozen/Bolzano
 # Status:                       Up and Running
+# Notes:
 
-#.............................................About wildlife_odom.py.....................................................
-# This code convets a Twist message from '/mattro/cmd_vel' into the motors' target velocities published as BockStatus 
-# messages over '/mattro/bock_status'. Inbetwee, it also runs a PID controller to set the target velocities.
-#
-# Inputs [subscribers]: /mattro/cmd_vel
-# Outputs [publishers]: bock_status
+#.............................................About can_write.py.....................................................
+# This is a rough implementation of the python scripts written by Carabin, simply converted as ROS node
+# to control the motors' drivers.
+
+# Inputs [subscribers]: /'mattro/bock_status
+#                       
+# Outputs [publishers]: messages over CAN
 #...........................................Included Libraries and Message Types.........................................
 import rospy
+
 from bock_controller.msg import BockStatus
 from geometry_msgs.msg import Twist
+from utils import mattro_bock
+
 import numpy as np
 #...........................................End of Included Libraries and Message Types..................................
 
 #.........................................................Global Variables...............................................
+speed_left_target = 0.0
+speed_right_target = 0.0
+gear_target = 0
+
 dx = 0.0
 dy = 0.0
 dr = 0.0
@@ -30,20 +39,25 @@ state = 0
 #.....................................................End of Global Variables............................................
 
 #......................................................Callback Functions ...............................................   
+def BockStatusCallback(status_msg):
+    global speed_left_target, speed_right_target, gear_target, state
+
+    speed_left_target = status_msg.speed_left_target
+    speed_right_target = status_msg.speed_right_target
+    gear_target = status_msg.gear_target
+
+    state = status_msg.state
+
 def TwistCallback(msg): # Read data form /mattro/cmd_vel
     global dx, dy, dr
     
     dx = msg.linear.x
     dy = msg.linear.y
     dr = msg.angular.z
-
-#def BockStatusCallback(status_msg):
-#    global state
-#    
-#    state = status_msg.state
 #...................................................End of Callback Functions ...........................................
  
 #...................................................User-defined Functions ..............................................
+
 def remap_percentage(x):
 
     oMin = 0
@@ -94,50 +108,48 @@ def compute_rpm_percentage(velocity):
     rpm = (velocity * gear_ratio * 60)/(drive_wheel_diameter * 3.14 * 3.6)
     return remap_percentage(rpm)
 
-def motor_spin(loop_rate, wheel_space):
-    global dx, dy, dr, operating, speed_left, speed_right, state
-    
-    print("TwistToMotorNode: up and running")
+def bock_control(loop_rate, wheel_space):
+    global dx, dy, dr, speed_left, speed_right, state, gear_target
 
-    # Create a BockStatus message
-    status_msg = BockStatus()
-    
-    while not rospy.is_shutdown():# and state == 3:
+    bock = mattro_bock.MattroBock()
+    # Connect to the robot
+    print("Connecting to the Bock...")
+    bock.connect()
+    print("Bock connected")
+    print("CanWriteNode: up and running")
 
-        # Compute the righ and left track speeds
-        
-        status_msg.speed_right_target = compute_rpm_percentage(1.0 * dx + dr * wheel_space / 2)
-        status_msg.speed_left_target = compute_rpm_percentage(1.0 * dx - dr * wheel_space / 2)
-        status_msg.gear_target = 1
-        
-        # Public them over /mattro/bock_status
-        pub1.publish(status_msg)
-
-        # Wait till the end of the loop
+    while not rospy.is_shutdown():
+        # Set the speed
+        bock.gear_target = 1
+        bock.speed_left_target = compute_rpm_percentage(1.0 * dx - dr * wheel_space / 2)
+        bock.speed_right_target = compute_rpm_percentage(1.0 * dx + dr * wheel_space / 2)
         loop_rate.sleep()
 
-    rospy.loginfo("Node terminated")
+    # Disconnect from the bock
+    bock.disconnect()
+    print("Bock disconnected.")
+    print("Node terminated")       
 #.............................................End of User-defined Functions ..............................................
 
 #......................................................Main Function......................................................
 if __name__ == '__main__':
+    nodeRate = 10
+
     try:
-        rospy.loginfo("Try running node")
-        rospy.init_node('twist_to_motor_speed', anonymous = True)
+        print("Try running node")
+        rospy.init_node('bock_bridge', anonymous=True)
 
         # Get ROS parameters from the launch file
         rate = rospy.get_param("~rate", 10)
         loop_rate = rospy.Rate(rate)
         wheel_space = rospy.get_param("~base_width", 0.644)
 
-
         # Define ROS publishers and Subscribers
-        pub1 = rospy.Publisher("/mattro/bock_status", BockStatus, queue_size = 10)
-        #sub1 = rospy.Subscriber("/mattro/bock_status", BockStatus, BockStatusCallback)
+        sub1 = rospy.Subscriber("/mattro/bock_status", BockStatus, BockStatusCallback)
         sub2 = rospy.Subscriber("/mattro/cmd_vel", Twist, TwistCallback)
-
-        motor_spin(loop_rate, wheel_space)
+        
+        bock_control(loop_rate, wheel_space)
 
     except rospy.ROSInterruptException:
-        rospy.loginfo("Node terminated")
+        print("Node terminated")
 #................................................End of Main Function......................................................... 

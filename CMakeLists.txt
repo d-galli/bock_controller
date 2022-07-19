@@ -32,6 +32,3 @@ catkin_package(
 include_directories(
   ${catkin_INCLUDE_DIRS}
 )
-
-add_executable(bock_controller_node src/utils/cmdVel.cpp)
-target_link_libraries(bock_controller_node ${catkin_LIBRARIES})

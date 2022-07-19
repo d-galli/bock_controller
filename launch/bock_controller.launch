@@ -14,6 +14,6 @@
     <!-- Run the node which publish over CAN the target wheel speeds -->
     <node pkg="bock_controller" type="can_write.py" name="CanWrite" output="screen"/>
 
-    <!node pkg="bock_controller" type="test_publisher.py" name="TestCmdVel" output="screen"/>
+    <node pkg="bock_controller" type="test_publisher.py" name="TestCmdVel" output="screen"/>
 
 </launch>
