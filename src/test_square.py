@@ -15,43 +15,46 @@ from geometry_msgs.msg import Twist
 
 #......................................................Main Function......................................................
 def talker():
+    i = 0
     pub = rospy.Publisher('/mattro/cmd_vel', Twist, queue_size = 10)
     rospy.init_node('test_pub', anonymous=True)
     rate = rospy.Rate(10) # 10hz
     msg = Twist()
     print("TestPubNode: up and running")
     while not rospy.is_shutdown():
-        for i in range(20):
-            if i < 10:
-                msg.linear.x = 0.1
-                msg.linear.y = 0.0
-                msg.linear.z = 0.0
+        if i < 50:
+            msg.linear.x = 0.1
+            msg.linear.y = 0.0
+            msg.linear.z = 0.0
 
-                msg.angular.x = 0.0
-                msg.angular.y = 0.0
-                msg.angular.z = 0.0
-            else:
-                msg.linear.x = -0.1
-                msg.linear.y = 0.0
-                msg.linear.z = 0.0
+            msg.angular.x = 0.0
+            msg.angular.y = 0.0
+            msg.angular.z = 0.0
+        elif i< 100 and i >= 50:
+            msg.linear.x = -0.1
+            msg.linear.y = 0.0
+            msg.linear.z = 0.0
 
-                msg.angular.x = 0.0
-                msg.angular.y = 0.0
-                msg.angular.z = 0.0
+            msg.angular.x = 0.0
+            msg.angular.y = 0.0
+            msg.angular.z = 0.0
+        else:
+            msg.linear.x = 0.0
+            msg.linear.y = 0.0
+            msg.linear.z = 0.0
 
+            msg.angular.x = 0.0
+            msg.angular.y = 0.0
+            msg.angular.z = 0.0
         pub.publish(msg)
+        i = i + 1
         rate.sleep()
     
     print("Shutting down ...")
-    msg.linear.x = 0.0
-    msg.linear.y = 0.0
-    msg.linear.z = 0.0
 
-    msg.angular.x = 0.0
-    msg.angular.y = 0.0
-    msg.angular.z = 0.0
 
     pub.publish(msg)
+    rate.sleep()
 
 if __name__ == '__main__':
     try:

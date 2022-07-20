@@ -16,7 +16,7 @@ from geometry_msgs.msg import Twist
 #......................................................Main Function......................................................
 def talker():
     pub = rospy.Publisher('/mattro/cmd_vel', Twist, queue_size = 10)
-    rospy.init_node('test_pub', anonymous=True)
+    rospy.init_node('test_pub_2', anonymous=True)
     rate = rospy.Rate(10) # 10hz
     msg = Twist()
     print("TestPubNode: up and running")

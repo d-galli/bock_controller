@@ -29,9 +29,10 @@ dr = 0.0
 #......................................................Callback Functions ...............................................   
 def TwistCallback(msg): # Read data form /mattro/cmd_vel
     global dx, dr
-
+    
     dx = msg.linear.x
     dr = msg.angular.z
+
 #...................................................End of Callback Functions ...........................................
  
 #...................................................User-defined Functions ..............................................
@@ -100,7 +101,7 @@ def motor_spin(loop_rate, wheel_space):
         status_msg.speed_right_target = compute_rpm_percentage(1.0 * dx + dr * wheel_space / 2)
         status_msg.speed_left_target = compute_rpm_percentage(1.0 * dx - dr * wheel_space / 2)
         status_msg.gear_target = 1
-        
+        #print("Right speed: ", status_msg.speed_right_target, "Left speed: ", status_msg.speed_left_target, end = "\r")
         # Public them over /mattro/bock_status
         pub1.publish(status_msg)
 
@@ -108,6 +109,7 @@ def motor_spin(loop_rate, wheel_space):
         loop_rate.sleep()
 
     rospy.loginfo("Node terminated")
+
 #.............................................End of User-defined Functions ..............................................
 
 #......................................................Main Function......................................................
