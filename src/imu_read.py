@@ -24,7 +24,6 @@ import rospy
 
 import numpy as np
 
-from scipy.spatial.transform import Rotation
 from geometry_msgs.msg import QuaternionStamped
 from geometry_msgs.msg import TwistStamped
 
@@ -32,7 +31,7 @@ from geometry_msgs.msg import TwistStamped
 #...........................................End of Included Libraries and Message Types..................................
 
 #.........................................................Global Variables...............................................
-header_info = []
+header_info = [0,0,0]
 
 quat = np.zeros(4)
 #.....................................................End of Global Variables............................................
@@ -48,16 +47,38 @@ def QuaternionCallback(msg): # Read data form /filter/quaternion
     quat[0] = msg.quaternion.x
     quat[1] = msg.quaternion.y
     quat[2] = msg.quaternion.z
-    quat[3] = msg.quaternion.z
+    quat[3] = msg.quaternion.w
 #...................................................End of Callback Functions ...........................................
 
 #...................................................User-defined Functions ..............................................
 def Quaternion2Euler(quat):
 
-    rot = Rotation.from_quat(quat)
-    euler = rot.as_euler('xyz', degrees = True)
+    x = quat[0]
+    y = quat[1]
+    z = quat[2]
+    w = quat[3]
+
+    ysqr = y * y
+
+    t0 = +2.0 * (w * x + y * z)
+    t1 = +1.0 - 2.0 * (x * x + ysqr)
+    X = np.degrees(np.arctan2(t0, t1))
+
+    t2 = +2.0 * (w * y - z * x)
+    t2 = np.where(t2>+1.0,+1.0,t2)
+    #t2 = +1.0 if t2 > +1.0 else t2
+
+    t2 = np.where(t2<-1.0, -1.0, t2)
+    #t2 = -1.0 if t2 < -1.0 else t2
+    Y = np.degrees(np.arcsin(t2))
+
+    t3 = +2.0 * (w * z + x * y)
+    t4 = +1.0 - 2.0 * (ysqr + z * z)
+    Z = np.degrees(np.arctan2(t3, t4))
+
+    euler = np.array([X, Y, Z])
     
-    return np.array(euler)
+    return euler
 
 def publish_pose():
     global header_info, quat
@@ -71,7 +92,7 @@ def publish_pose():
         eul = Quaternion2Euler(quat)
         
         pose_msg.header.seq = header_info[0]
-        pose_msg.header.time = header_info[1]
+        pose_msg.header.stamp = header_info[1]
         pose_msg.header.frame_id = header_info[2]
 
         pose_msg.twist.linear.x = 0.0
