@@ -1,0 +1,21 @@
+<launch>
+    <!-- This is the format for a comment in HTML --> 
+
+
+    <!-- Run the node which convert Twist messages to target wheel speeds and publish them over CAN -->
+    <node pkg="bock_controller" type="can_write.py" name="CanWrite" output="screen">
+        <rosparam param="base_width">0.644</rosparam>
+        <rosparam param="rate">10</rosparam>
+    </node>
+
+    <!-- Run the node which publish bock_status messages -->
+    <node pkg="bock_controller" type="can_read.py" name="CanRead" output="screen"/>
+
+    <!-- Run the node of the IMU X-Sens 650 -->
+    <node  name="xsens_mti_node" pkg="xsens_mti_driver" type="xsens_mti_node" output="screen">
+        <rosparam command="load" file="$(find xsens_mti_driver)/param/xsens_mti_node.yaml" />
+    </node>
+
+    <!-- Run the node which convert quaternion into Euler angles -->
+    
+</launch>
