@@ -10,3 +10,6 @@ sudo ip link set up can0
 
 # Set up the USB communication to the IMU
 sudo chmod a+rw /dev/ttyUSB0
+
+# Run ROS environment
+roscore
