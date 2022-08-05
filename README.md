@@ -20,6 +20,10 @@ Again, in a terminal run:
 sudo ip link set can0 type can bitrate 500000
 sudo ip link set up can0
 ```
+To enable the IMU over USB, in a terminal run:
+```
+sudo chmod a+rw /dev/ttyUSB
+```
 
 ## To run the controller
 
