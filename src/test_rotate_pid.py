@@ -1,64 +1,46 @@
 #!/usr/bin/env python3
 
-# Filename:                     mattro_pose.py
-# Creation Date:                04/07/2022
-# Last Revision Date:           04/07/2022
+# Filename:                     test_rotate.py
+# Creation Date:                12/08/2022
+# Last Revision Date:           12/08/2022
 # Author(s) [email]:			Davide Galli [dgalli@unibz.it]
 # Revisor(s) {Date}:        	
 # Organization/Institution:	    Free Univerisity of Bozen/Bolzano
-# Status:                       To be tested
+# Status:                       Up and Ready
 # Notes:                        
 
 #.............................................About can_read.py.....................................................
-# This code is aimed to read the data from the IMU and adapt them according to the robot set up. Then, this information
-# are publihed over the topic "/mattro/orientation".
+# This code is aimed to make the mattro rovo 2 rotate of roughly 90 degrees using orientation data from the IMU
 #
 #
-# Inputs [subscribers]: /filtered/quaternions
-#                       /zyx
+# Inputs [subscribers]: /filter/quaternion
 #                       
-# Outputs [publishers]: /mattro/orientation
+# Outputs [publishers]: /mattro/cmd_vel
 #                  
 #...........................................Included Libraries and Message Types.........................................
-from turtle import pos
 import rospy
-
 import numpy as np
-
 from geometry_msgs.msg import QuaternionStamped
-from geometry_msgs.msg import TwistStamped
-from geometry_msgs.msg import Pose
-
-
+from geometry_msgs.msg import Twist
+from simple_pid import PID
 #...........................................End of Included Libraries and Message Types..................................
 
 #.........................................................Global Variables...............................................
-header_info = [0,0,0]
-
 quat = np.zeros(4)
-
-position = np.zeros(3)
 #.....................................................End of Global Variables............................................
- 
+
+#.........................................................Global Constants...............................................
+ERROR_THRESHOLD = 0.1 # [deg]
+#.....................................................End of Global Constants............................................
+
 #......................................................Callback Functions ...............................................   
 def ImuCallback(msg): # Read data from the IMU
-    global quat, header_info
-    
-    header_info[0] = msg.header.seq
-    header_info[1] = msg.header.stamp
-    header_info[2] = "mattro_bock"
+    global quat
 
     quat[0] = msg.quaternion.x
     quat[1] = msg.quaternion.y
     quat[2] = msg.quaternion.z
     quat[3] = msg.quaternion.w
-
-def PozyxCallback(msg): # Read data fom Pozyx
-    global position
-    
-    position[0] = msg.position.x
-    position[1] = msg.positon.y
-    position[2] = msg.position.z
 #...................................................End of Callback Functions ...........................................
 
 #...................................................User-defined Functions ..............................................
@@ -91,32 +73,62 @@ def Quaternion2Euler(quat):
     
     return euler
 
-def publish_pose():
-    global header_info, quat, position
-    print("IMUDataNode: up and running")
+def mattro_rotate(loop_rate):
+    global header_info, quat
+    print("SquarePathNode: up and running")
 
-    # Create a Pose message
-    pose_msg = TwistStamped()
-    
+    # Create a Twist message
+    cmd_vel_msg = Twist()
+
+    pid = PID(0.5, 0.5, 0.1)
+
+    state = 0
+
     while not rospy.is_shutdown():
-
-        eul = Quaternion2Euler(quat)
         
-        pose_msg.header.seq = header_info[0]
-        pose_msg.header.stamp = header_info[1]
-        pose_msg.header.frame_id = header_info[2]
+        if state == 0:
+            target_angle = 123 # [deg]
+            pid.setpoint = target_angle
+            pid.output_limits = (- 0.3, + 0.3)    # Output value will be between -0.3 and +0.3 [rad/s]
 
-        pose_msg.twist.linear.x = position[0]
-        pose_msg.twist.linear.y = position[1]
-        pose_msg.twist.linear.z = position[2]
+            state = 1
+        
+        if state == 1:
 
-        pose_msg.twist.angular.x = eul[0]
-        pose_msg.twist.angular.y = eul[1]
-        pose_msg.twist.angular.z = eul[2]
+            euler = Quaternion2Euler(quat)
+            current_angle = euler[2]
+            error = np.abs(target_angle - current_angle)
+            
+            if error <= ERROR_THRESHOLD:
+                state = 2
+            print("Current Yaw: ", current_angle, "Current Error: ", error, end = "\r")
 
+            cmd_vel_msg.linear.x = 0.0
+            cmd_vel_msg.linear.y = 0.0
+            cmd_vel_msg.linear.z = 0.0
+
+            cmd_vel_msg.angular.x = 0.0
+            cmd_vel_msg.angular.y = 0.0
+            cmd_vel_msg.angular.z = pid(current_angle)
+        
+        if state == 2:
+            print("Target succesfully reached", end = "\r")
+            cmd_vel_msg.linear.x = 0.0
+            cmd_vel_msg.linear.y = 0.0
+            cmd_vel_msg.linear.z = 0.0
+
+            cmd_vel_msg.angular.x = 0.0
+            cmd_vel_msg.angular.y = 0.0
+            cmd_vel_msg.angular.z = 0.0
+
+
+        
         # Publish the ROS message
-        pub1.publish(pose_msg)
+        pub1.publish(cmd_vel_msg)
+        loop_rate.sleep()
 
+    # Publish the ROS message
+    print("Shutting down ...")
     print("\n Node terminated")
 #.............................................End of User-defined Functions ..............................................
 
@@ -126,15 +138,14 @@ if __name__ == '__main__':
 
     try:
         print("Try running node")
-        rospy.init_node('imu_read', anonymous=True)
+        rospy.init_node('test_orientation', anonymous=True)
         loop_rate = rospy.Rate(nodeRate)
 
         # Define ROS publishers and Subscribers
         sub1 = rospy.Subscriber("/filter/quaternion", QuaternionStamped, ImuCallback)
-        sub2 = rospy.Subscriber("/zyx", Pose, PozyxCallback)
-        pub1 = rospy.Publisher("/mattro/pose", TwistStamped, queue_size = 10)
+        pub1 = rospy.Publisher("/mattro/cmd_vel", Twist, queue_size = 10)
         
-        publish_pose()
+        mattro_rotate(loop_rate)
 
     except rospy.ROSInterruptException:
         print("Node terminated")

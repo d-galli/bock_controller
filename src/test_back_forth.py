@@ -1,34 +1,32 @@
 #!/usr/bin/env python3
 
-# Filename:                     mattro_navigation_test.py
-# Creation Date:                11/08/2022
-# Last Revision Date:           11/08/2022
+# Filename:                     test_rotate.py
+# Creation Date:                12/08/2022
+# Last Revision Date:           12/08/2022
 # Author(s) [email]:			Davide Galli [dgalli@unibz.it]
 # Revisor(s) {Date}:        	
 # Organization/Institution:	    Free Univerisity of Bozen/Bolzano
-# Status:                       To be tested
+# Status:                       Up and Ready
 # Notes:                        
 
 #.............................................About can_read.py.....................................................
-# This code is aimed to make the mattro rovo 2 move along a squared shaped path by means of data from the pozyx 
-# system and the IMU.
+# This code is aimed to make the mattro rovo 2 rotate of roughly 90 degrees using orientation data from the IMU
 #
 #
-# Inputs [subscribers]: /mattro/pose
+# Inputs [subscribers]: /filter/quaternion
 #                       
 # Outputs [publishers]: /mattro/cmd_vel
 #                  
 #...........................................Included Libraries and Message Types.........................................
 import rospy
 import numpy as np
-from geometry_msgs.msg import TwistStamped
+from geometry_msgs.msg import QuaternionStamped
 from geometry_msgs.msg import Twist
 from simple_pid import PID
 #...........................................End of Included Libraries and Message Types..................................
 
 #.........................................................Global Variables...............................................
-euler = np.zeros(3)
-position = np.zeros(3)
+quat = np.zeros(4)
 #.....................................................End of Global Variables............................................
 
 #.........................................................Global Constants...............................................
@@ -36,61 +34,77 @@ ERROR_THRESHOLD = 0.1 # [deg]
 #.....................................................End of Global Constants............................................
 
 #......................................................Callback Functions ...............................................   
-def PoseCallback(msg): # Read the pose of the mattro
-    global euler, position
+def ImuCallback(msg): # Read data from the IMU
+    global quat
 
-    position[0] = msg.twist.linear.x
-    position[1] = msg.twist.linear.y
-    position[2] = msg.twist.linear.z
-
-    euler[0] = msg.twist.angular.x
-    euler[1] = msg.twist.angular.y
-    euler[2] = msg.twist.angular.z
+    quat[0] = msg.quaternion.x
+    quat[1] = msg.quaternion.y
+    quat[2] = msg.quaternion.z
+    quat[3] = msg.quaternion.w
 #...................................................End of Callback Functions ...........................................
 
 #...................................................User-defined Functions ..............................................
-def linear_path(loop_rate):
-    global euler, position
-    print("LinearPathNode: up and running")
+def Quaternion2Euler(quat):
+
+    x = quat[0]
+    y = quat[1]
+    z = quat[2]
+    w = quat[3]
+
+    ysqr = y * y
+
+    t0 = +2.0 * (w * x + y * z)
+    t1 = +1.0 - 2.0 * (x * x + ysqr)
+    X = np.degrees(np.arctan2(t0, t1))
+
+    t2 = +2.0 * (w * y - z * x)
+    t2 = np.where(t2>+1.0,+1.0,t2)
+    #t2 = +1.0 if t2 > +1.0 else t2
+
+    t2 = np.where(t2<-1.0, -1.0, t2)
+    #t2 = -1.0 if t2 < -1.0 else t2
+    Y = np.degrees(np.arcsin(t2))
+
+    t3 = +2.0 * (w * z + x * y)
+    t4 = +1.0 - 2.0 * (ysqr + z * z)
+    Z = np.degrees(np.arctan2(t3, t4))
+
+    euler = np.array([X, Y, Z])
+    
+    return euler
+
+def mattro_rotate(loop_rate):
+    global header_info, quat
+    print("TestBackForthNode: up and running")
 
     # Create a Twist message
     cmd_vel_msg = Twist()
-    current_travel = 0
-    error = 0
 
     pid = PID(0.5, 0.5, 0.1)
 
-    state = -1
+    state = 0
+    count = 0
+
     while not rospy.is_shutdown():
 
-        if state == -1:
-            if position[0] != 0.0 and position[1] != 0.0:
-                state = 0
-
+        euler = Quaternion2Euler(quat)
         if state == 0:
-            target_position = np.array([position[0], position[1]]) + np.array([0, 2])
-            pid.setpoint = target_position[1]
-            pid.output_limits = (- 0.1, + 0.1)    # Output value will be between -0.3 and +0.3 [rad/s]
-            state = 1
-        
+            if count <= 100:
+                cmd_vel_msg.linear.x = 0.2
+                cmd_vel_msg.linear.y = 0.0
+                cmd_vel_msg.linear.z = 0.0
+
+                cmd_vel_msg.angular.x = 0.0
+                cmd_vel_msg.angular.y = 0.0
+                cmd_vel_msg.angular.z = 0.0
+                print("Moving forward ...", end = "\r")
+                count += 1
+
+            else:     
+                state = 1
+                count = 0
+
         if state == 1:
-            current_position = np.array([position[0], position[1]])
-            error = np.abs(np.linalg.norm(target_position - current_position))
-            print("Target Position \n X: ", target_position[0], " Y: ", target_position[1])
-            print("Current Position \n X: ", current_position[0], " Y: ", current_position[1])
-            print("Current Error: ", error)
-            if error <= 0.08:
-                state = 8
-            
-            cmd_vel_msg.linear.x = -pid(error)
-            cmd_vel_msg.linear.y = 0.0
-            cmd_vel_msg.linear.z = 0.0
-
-            cmd_vel_msg.angular.x = 0.0
-            cmd_vel_msg.angular.y = 0.0
-            cmd_vel_msg.angular.z = 0.0
-
-        if state == 2:
             target_angle = euler[2] + 180 # [deg]
             if target_angle >= 180:
                 target_angle -= 360
@@ -101,16 +115,16 @@ def linear_path(loop_rate):
             pid.setpoint = target_angle
             pid.output_limits = (- 0.3, + 0.3)    # Output value will be between -0.3 and +0.3 [rad/s]
 
-            state = 3
+            state = 2
         
-        if state == 3:
+        if state == 2:
 
             current_angle = euler[2]
             error = np.abs(target_angle - current_angle)
             
             if error <= ERROR_THRESHOLD:
-                state = 4
-            print("Current Yaw: ", current_angle, "Current Error: ", error)
+                state = 3
+            print("Current Yaw: ", current_angle, "Current Error: ", error, end = "\r")
 
             cmd_vel_msg.linear.x = 0.0
             cmd_vel_msg.linear.y = 0.0
@@ -120,30 +134,21 @@ def linear_path(loop_rate):
             cmd_vel_msg.angular.y = 0.0
             cmd_vel_msg.angular.z = pid(current_angle)
         
+        if state == 3:
+            if count <= 100:
+                cmd_vel_msg.linear.x = 0.2
+                cmd_vel_msg.linear.y = 0.0
+                cmd_vel_msg.linear.z = 0.0
+
+                cmd_vel_msg.angular.x = 0.0
+                cmd_vel_msg.angular.y = 0.0
+                cmd_vel_msg.angular.z = 0.0
+                print("Moving forward ...", end = "\r")
+                count += 1
+            else:
+                state = 4
+
         if state == 4:
-            starting_position = np.array([position[0], position[1]])
-            target_travel = 2
-            pid.setpoint = target_travel
-            pid.output_limits = (- 0.1, + 0.1)    # Output value will be between -0.3 and +0.3 [rad/s]
-            state = 5
-
-        if state == 5:
-            current_position = np.array([position[0], position[1]])
-            current_travel = np.linalg.norm(current_position - starting_position)
-            error = np.abs(target_travel - current_travel)
-            print("Current Travel: ", current_travel, "Current Error: ", error)
-            if error <= ERROR_THRESHOLD:
-                state = 6
-            
-            cmd_vel_msg.linear.x = pid(current_travel)
-            cmd_vel_msg.linear.y = 0.0
-            cmd_vel_msg.linear.z = 0.0
-
-            cmd_vel_msg.angular.x = 0.0
-            cmd_vel_msg.angular.y = 0.0
-            cmd_vel_msg.angular.z = 0.0
-
-        if state == 6:
             target_angle = euler[2] + 180 # [deg]
             if target_angle >= 180:
                 target_angle -= 360
@@ -154,17 +159,16 @@ def linear_path(loop_rate):
             pid.setpoint = target_angle
             pid.output_limits = (- 0.3, + 0.3)    # Output value will be between -0.3 and +0.3 [rad/s]
 
-            state = 7
+            state = 5
         
-        if state == 7:
+        if state == 5:
 
             current_angle = euler[2]
             error = np.abs(target_angle - current_angle)
             
             if error <= ERROR_THRESHOLD:
-                state = 8
-                current_travel = 0
-            print("Current Yaw: ", current_angle, "Current Error: ", error)
+                state = 6
+            print("Current Yaw: ", current_angle, "Current Error: ", error, end = "\r")
 
             cmd_vel_msg.linear.x = 0.0
             cmd_vel_msg.linear.y = 0.0
@@ -174,8 +178,8 @@ def linear_path(loop_rate):
             cmd_vel_msg.angular.y = 0.0
             cmd_vel_msg.angular.z = pid(current_angle)
 
-        if state == 8:
-            print("Target succesfully reached")
+        if state == 6:
+            print("Target succesfully reached", end = "\r")
             cmd_vel_msg.linear.x = 0.0
             cmd_vel_msg.linear.y = 0.0
             cmd_vel_msg.linear.z = 0.0
@@ -201,14 +205,14 @@ if __name__ == '__main__':
 
     try:
         print("Try running node")
-        rospy.init_node('mattro_navigation_test', anonymous=True)
+        rospy.init_node('test_back_and_forth', anonymous=True)
         loop_rate = rospy.Rate(nodeRate)
 
         # Define ROS publishers and Subscribers
-        sub1 = rospy.Subscriber("/mattro/pose", TwistStamped, PoseCallback)
+        sub1 = rospy.Subscriber("/filter/quaternion", QuaternionStamped, ImuCallback)
         pub1 = rospy.Publisher("/mattro/cmd_vel", Twist, queue_size = 10)
         
-        linear_path(loop_rate)
+        mattro_rotate(loop_rate)
 
     except rospy.ROSInterruptException:
         print("Node terminated")

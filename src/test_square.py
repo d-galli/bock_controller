@@ -23,21 +23,21 @@ def talker():
     print("TestPubNode: up and running")
     while not rospy.is_shutdown():
         if i < 50:
-            msg.linear.x = 0.1
+            msg.linear.x = 0.0
             msg.linear.y = 0.0
             msg.linear.z = 0.0
 
             msg.angular.x = 0.0
             msg.angular.y = 0.0
-            msg.angular.z = 0.0
+            msg.angular.z = 0.8
         elif i< 100 and i >= 50:
-            msg.linear.x = -0.1
+            msg.linear.x = 0.0
             msg.linear.y = 0.0
             msg.linear.z = 0.0
 
             msg.angular.x = 0.0
             msg.angular.y = 0.0
-            msg.angular.z = 0.0
+            msg.angular.z = -0.8
         else:
             msg.linear.x = 0.0
             msg.linear.y = 0.0
