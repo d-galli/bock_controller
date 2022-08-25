@@ -82,7 +82,7 @@ def mattro_square(loop_rate):
     # Create a Twist message
     cmd_vel_msg = Twist()
 
-    pid = PID(0.6, 0.1, 0.1) # 0.5 0.5 0.1
+    pid = PID(0.6, 0.08, 0.2) # 0.5 0.5 0.1
 
     state = 0
     count = 0
@@ -152,7 +152,7 @@ def mattro_square(loop_rate):
                 count = 0
 
         if state == 4:
-            target_angle = euler[2] - 90 # [deg]
+            target_angle = target_angle - 90 # [deg]
             if target_angle >= 180:
                 target_angle -= 360
             elif target_angle <= -180:
@@ -197,7 +197,7 @@ def mattro_square(loop_rate):
                 count = 0
 
         if state == 7:
-            target_angle = euler[2] - 90 # [deg]
+            target_angle = target_angle - 90 # [deg]
             if target_angle >= 180:
                 target_angle -= 360
             elif target_angle <= -180:
@@ -242,7 +242,7 @@ def mattro_square(loop_rate):
                 count = 0
 
         if state == 10:
-            target_angle = euler[2] - 90 # [deg]
+            target_angle = target_angle - 90 # [deg]
             if target_angle >= 180:
                 target_angle -= 360
             elif target_angle <= -180:
