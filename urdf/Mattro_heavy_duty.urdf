@@ -19,13 +19,9 @@
       <geometry>
         <mesh filename="package://bock_controller/urdf/Mattro ROVO 2 - Heavy Duty - simplified.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-<<<<<<< HEAD
-      <material name="mattro_blue"/>
-=======
       <material name="mattro_blue">
         <color rgba="0.2 0.2 0.8 1.0"/>
       </material>
->>>>>>> f716175ea8f7069bbcff3252667c51dde47628ea
     </visual>
   </link>
 
