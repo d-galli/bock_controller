@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot name="mattro_rovo_2">
   
-  <material name="mattro_orange">
+  <material name="xsens_orange">
     <color rgba="0.92 0.45 0.02 1.0"/>
   </material>
 
@@ -25,20 +25,37 @@
     </visual>
   </link>
 
+  <link name="imu_link">
+    <visual>
+      <origin rpy="-1.57079632679 0.0 1.57079632679" xyz="0.0 0.0 0.0016"/>
+      <geometry>
+        <mesh filename="package://xsens_mti_driver/urdf/MTi_6xx.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="xsens_orange"/>
+    </visual>
+  </link>
+
   <link name="control_box_link">
     <visual>
-      <origin rpy="0 0 1.57079632679" xyz="-0.2 0.25 -0.21"/>
+      <origin rpy="0.0 0.0 0.0" xyz="-0.25 0.20 -0.105"/>
       <geometry>
-        <box size="0.4 0.5 0.26"/>
+        <box size="0.5 0.4 0.2"/>
       </geometry>
       <material name="plastic_white"/>
     </visual>
   </link>
 
   <joint name="base_to_box" type="fixed">
-    <origin rpy="0.0 0.0 3.1416" xyz="0.0 0.0 1.0"/>
-    <parent link="mattro_base_link"/>
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+    <parent link="control_box_link"/>
+    <child link="mattro_base_link"/>
+  </joint>
+
+  <joint name="imu_to_box" type="fixed">
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+    <parent link="imu_link"/>
     <child link="control_box_link"/>
   </joint>
+
 
 </robot>

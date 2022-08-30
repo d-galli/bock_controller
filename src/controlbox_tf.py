@@ -17,7 +17,7 @@ def control_box_tf():
         static_transformStamped.header.frame_id = "imu_link"
         static_transformStamped.child_frame_id = "control_box_link"
 
-        static_transformStamped.transform.translation.x = -0.249
+        static_transformStamped.transform.translation.x = +0.249
         static_transformStamped.transform.translation.y = -0.229
         static_transformStamped.transform.translation.z = +0.0325
 
