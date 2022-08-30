@@ -16,9 +16,9 @@ def mattro_tf():
         static_transformStamped.header.stamp = rospy.Time.now()
         static_transformStamped.header.frame_id = "control_box_link"
         static_transformStamped.child_frame_id = "mattro_base_link"
-        static_transformStamped.transform.translation.x = +0.2000
-        static_transformStamped.transform.translation.y = +0.1600
-        static_transformStamped.transform.translation.z = +0.2290
+        static_transformStamped.transform.translation.x = -0.1600
+        static_transformStamped.transform.translation.y = +0.2000
+        static_transformStamped.transform.translation.z = +0.1850
 
         quat = tf.transformations.quaternion_from_euler(np.pi, 0.0, 0.0)
         static_transformStamped.transform.rotation.x = quat[0]

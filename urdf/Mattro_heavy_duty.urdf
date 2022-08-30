@@ -15,7 +15,7 @@
 
   <link name="mattro_base_link">
     <visual>
-      <origin rpy="0 0 1.57079632679" xyz="-0.092 0 -0.324"/>
+      <origin rpy="0 0 1.57079632679" xyz="0.089 0 -0.343"/>
       <geometry>
         <mesh filename="package://bock_controller/urdf/Mattro ROVO 2 - Heavy Duty - simplified.stl" scale="0.001 0.001 0.001"/>
       </geometry>
@@ -29,7 +29,7 @@
     <visual>
       <origin rpy="-1.57079632679 0.0 1.57079632679" xyz="0.0 0.0 0.0016"/>
       <geometry>
-        <mesh filename="package://xsens_mti_driver/urdf/MTi_6xx.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://bock_controller/urdf/MTi_6xx.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="xsens_orange"/>
     </visual>
@@ -37,9 +37,9 @@
 
   <link name="control_box_link">
     <visual>
-      <origin rpy="0.0 0.0 0.0" xyz="-0.25 0.20 -0.105"/>
+      <origin rpy="-1.57079632679 0.0 1.5707963267" xyz="0.0 0.01 0.0"/>
       <geometry>
-        <box size="0.5 0.4 0.2"/>
+        <mesh filename="package://bock_controller/urdf/Box_400x500x200.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="plastic_white"/>
     </visual>
