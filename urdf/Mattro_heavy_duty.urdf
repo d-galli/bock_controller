@@ -1,14 +1,42 @@
 <?xml version="1.0"?>
 <robot name="mattro_rovo_2">
+  
+  <material name="mattro_orange">
+    <color rgba="0.92 0.45 0.02 1.0"/>
+  </material>
+
+  <material name="mattro_blue">
+    <color rgba="0.0 0.0 0.8 1"/>
+  </material>
+
+  <material name="plastic_white">
+    <color rgba="1.0 1.0 1.0 1.0"/>
+  </material>
+
   <link name="mattro_base_link">
     <visual>
       <origin rpy="0 0 1.57079632679" xyz="0 0 0"/>
       <geometry>
         <mesh filename="package://bock_controller/urdf/Mattro ROVO 2 - Heavy Duty - simplified.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="mattro_orange">
-        <color rgba="0.92 0.45 0.02 1.0"/>
-      </material>
+      <material name="mattro_blue"/>
     </visual>
   </link>
+
+  <link name="control_box_link">
+    <visual>
+      <origin rpy="0 0 1.57079632679" xyz="-0.2 0.25 -0.21"/>
+      <geometry>
+        <box size="0.4 0.5 0.26"/>
+      </geometry>
+      <material name="plastic_white"/>
+    </visual>
+  </link>
+
+  <joint name="base_to_box" type="fixed">
+    <origin rpy="0.0 0.0 3.1416" xyz="0.0 0.0 1.0"/>
+    <parent link="mattro_base_link"/>
+    <child link="control_box_link"/>
+  </joint>
+
 </robot>
