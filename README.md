@@ -32,11 +32,11 @@ where:
 
 - $ \phi_{wheel} $ is the wheel diameter &rarr; 0.35 for heavy duty version
 
-- $ y$ is the gear ratio &rarr; 7 or 16
+- $ y $ is the gear ratio &rarr; 7 or 16
 
 Speed is expressed in percentage from 0 up to 1000, where the 1000% corresponds to the maximum speed which is 20 [km/h].
 
-Since the robot employes a skid steering driving system, the speed of each track should be computed starting from the overall linear speed $ v_x$ and angular velocity $\omega$.
+Since the robot employes a skid steering driving system, the speed of each track should be computed starting from the overall linear speed $ v_x $ and angular velocity $\omega $.
 
 $$ v_r = v_x - \omega \cdot \frac{d_{wheels}}{2}$$
 
