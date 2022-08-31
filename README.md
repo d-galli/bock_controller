@@ -44,7 +44,7 @@ $$ v_r = v_x + \omega \cdot \frac{d_{wheels}}{2}$$
 
 where $d_{wheels}$ is the distance between the two tracks.
 
-## Jeston TX2 CAN Communication
+## Jeston TX2 CAN communication
 
 The Jetson TX2 supports natively CAN communication. Indeed, it as already built-in two CAN ports that can be used via J26 header. A brief schematic of a possible circuit is reported below.
 
@@ -65,7 +65,7 @@ The Jetson TX2 developer board comes with 2 CAN controllers, hence one can have 
 
 Locate J26 / GPIO Expansion Header and its pin. You can find the spec of these pins on the Jetson TX2 Dev Kit Carrier Board Specification document at this [link](https://developer.nvidia.com/embedded/downloads) , all the documents are free to download but require a login.
 
-***Connecting Jetson & Transceiver***
+<ins> Connecting Jetson and transceiver</ins>
 
 **Can0**
 
@@ -116,7 +116,7 @@ Install can-ultils to send and receive CAN message over terminal
 sudo apt-get install can-utils
 ```
 
-<ins>Example send & receive can message </ins>
+<ins>Example of sending and receiving a CAN message </ins>
 
 For example, you connect both can0 to can1 together. You want to send a sample message from can0 and receive from can1.
 
@@ -134,7 +134,7 @@ cansend can0 01a#11223344AABBCCDD
 
 If the message was sent successfully, you will see the message on can1’s terminal
 
-<ins> Possible Errors </ins>
+<ins> Possible errors </ins>
 
 The transceiver do not come with a terminal resistor (120 ohm) built-in. If the other CAN device you connect to also does not have the terminal resistor, you need to insert one into the system to get the message flow through. Otherwise, all messages would go into error state.
 
