@@ -36,7 +36,7 @@ where:
 
 Speed is expressed in percentage from 0 up to 1000, where the 1000% corresponds to the maximum speed which is 20 [km/h].
 
-Since the robot employes a skid steering driving system, the speed of each track should be computed starting from the overall linear speed $ v_x $ and angular velocity $\omega $.
+Since the robot employes a skid steering driving system, the speed of each track should be computed starting from the overall linear speed $v_x$ and angular velocity $\omega $.
 
 $$ v_r = v_x - \omega \cdot \frac{d_{wheels}}{2}$$
 
@@ -135,6 +135,7 @@ cansend can0 01a#11223344AABBCCDD
 If the message was sent successfully, you will see the message on can1’s terminal
 
 <ins> Possible Errors </ins>
+
 The transceiver do not come with a terminal resistor (120 ohm) built-in. If the other CAN device you connect to also does not have the terminal resistor, you need to insert one into the system to get the message flow through. Otherwise, all messages would go into error state.
 
 
