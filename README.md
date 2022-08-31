@@ -28,11 +28,11 @@ $$ v = \frac{rpm \cdot \phi_{wheel}\cdot \pi}{y \cdot 60}\cdot 3.6$$
 
 where:
 
-- $ v $ is the speed of the robot in [km/h]
+- $v$ is the speed of the robot in [km/h]
 
-- $ \phi_{wheel} $ is the wheel diameter &rarr; 0.35 for heavy duty version
+- $\phi_{wheel}$ is the wheel diameter &rarr; 0.35 for heavy duty version
 
-- $ y $ is the gear ratio &rarr; 7 or 16
+- $y$ is the gear ratio &rarr; 7 or 16
 
 Speed is expressed in percentage from 0 up to 1000, where the 1000% corresponds to the maximum speed which is 20 [km/h].
 
