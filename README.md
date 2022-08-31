@@ -18,7 +18,7 @@ The matching of the CAN channels and the pins is given below.
 - pin 7 &rarr; CAN H
 
 <img src="documentation/CAN_connector.png" alt="Mattro CAN connector" style="height: 100px; width:175px;"/>
- <img src="documentation/Innomaker_USB2CAN.png" alt="Mattro CAN connector" style="height: 100px; width:300px;"/>
+<img src="documentation/Innomaker_USB2CAN.png" alt="Mattro CAN connector" style="height: 100px; width:300px;"/>
 
 ## Compute the robot speed
 
