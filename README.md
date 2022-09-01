@@ -158,13 +158,69 @@ To enable the IMU over USB, in a terminal run:
 ```
 sudo chmod a+rw /dev/ttyUSB
 ```
+All this operations can be done together by means of a simple bash script saved under src/utils. To run it, open a terminal, move into the folder and type:
+```
+./ros_setup.sh
+```
+<ins> !! It needs root permission !! </ins>
+
+This will run all the aforementioned commands and will also star a roscore session.
+Now, everything is ready to run nodes.
+
+## Set up ROS environment
+
+To run nodes from your local PC is fundamental to properly set up your ROS environment. Indeed, the ROS master must be the Mattro and not your local PC.
+Therefore, the bashrc file should be edited. To open it, run:
+```
+sudo gedit ~/.bashrc
+```
+Then add the following lines to it.
+```
+export ROS_HOSTNAME=xxx.xxx.xxx.xxx
+export ROS_IP=192.168.8.17
+export ROS_MASTER_URI=http://192.168.8.17:11311
+```
+where *ROS_HOSTNAME* is the ip address of your local PC.
+
+Then, please connect to **Eminent** wifi (free wifi). To check, try to run: 
+```
+rostopic list
+```
+If an output is given, everything is ready to go. Now you can launch nodes and access topics also from your remote PC.
+
+To connect to the Jetson remotely, **ssh** can be used as follows:
+```
+ssh first@192.168.8.17
+```
+
 
 ## To run the controller
 
-Once the CAN interface is up and running, to launch the controller, run the followin in a terminal:
+Once the CAN interface is up and running, the IMU is connected, the Pozyx system is wokring properly and a roscore session is running, there are a bunch of options:
+1. To launch only the motor controller, run the following in a terminal:
 ```
 roslaunch bock_controller bock_controller.launch
 ```
+2. To launch only the broadcasting of the robot pose, run the following in a terminal:
+```
+roslaunch bock_controller bock_pose.launch
+```
+
+3. To launch only the entire navigation system, run the following in a terminal:
+```
+roslaunch bock_controller bock_navigation.launch
+```
+
+4. To visualise in rviz the robot from the Jetson, run the following in a terminal:
+```
+roslaunch bock_controller bock_display.launch
+```
+
+If *bock_navigation* or  *bock_pose* is already running and you want to visualise the robot from your local PC, run the following in a terminal:
+```
+roslaunch bock_controller bock_display_remote.launch
+```
+
 ## References
 
 - [Innomaker USB to CAN Converter Module](https://www.amazon.it/Modulo-convertitore-USB-Raspberry-Zero/dp/B07Q812QK8/ref=sr_1_7?keywords=can+usb+adapter&qid=1647593956&sprefix=USB+CAN+adap%2Caps%2C79&sr=8-7)
