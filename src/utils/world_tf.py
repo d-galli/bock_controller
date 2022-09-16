@@ -1,37 +1,24 @@
 #!/usr/bin/env python3
-from turtle import position
 import rospy
 import tf
 import tf2_ros
 import geometry_msgs.msg
-from geometry_msgs.msg import Pose
-import numpy as np
-
-position = np.zeros(3)
-
-def PozyxCallback(msg): # Read data fom Pozyx
-    global position
-    
-    position[0] = msg.position.x
-    position[1] = msg.position.y
-    position[2] = msg.position.z
 
 def world_tf():
     global position
 
-    print("World TF broadcasting: up and running")
+    print("World Imu TF broadcasting: up and running")
 
     while not rospy.is_shutdown():
         broadcaster = tf2_ros.StaticTransformBroadcaster()
         static_transformStamped = geometry_msgs.msg.TransformStamped()
 
         static_transformStamped.header.stamp = rospy.Time.now()
-        static_transformStamped.header.frame_id = "world"
+        static_transformStamped.header.frame_id = "mattro_base_link"
         static_transformStamped.child_frame_id = "world_imu"
-        static_transformStamped.transform.translation.x = position[0]
-        static_transformStamped.transform.translation.y = position[1]
-        static_transformStamped.transform.translation.z = + 0.600 #position[2]
-
+        static_transformStamped.transform.translation.x = 0.089
+        static_transformStamped.transform.translation.y = -0.029
+        static_transformStamped.transform.translation.z = 0.2175
 
         quat = tf.transformations.quaternion_from_euler(0.0, 0.0, 0.0)
         static_transformStamped.transform.rotation.x = quat[0]
@@ -43,9 +30,7 @@ def world_tf():
 
 
 if __name__ == '__main__':
-    rospy.init_node('world_tf_braodcaster')
-    sub1 = rospy.Subscriber("/zyx", Pose, PozyxCallback)
-
+    rospy.init_node('world_imu_tf_braodcaster')
 
     try:
         world_tf()

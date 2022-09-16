@@ -22,16 +22,13 @@
 import rospy
 import numpy as np
 from bock_controller.msg import BockStatus
+from nav_msgs.msg import Odometry
 #...........................................End of Included Libraries and Message Types..................................
 
 #.........................................................Global Variables...............................................
 v_r = 0.0
 v_l = 0.0
 #.....................................................End of Global Variables............................................
-
-#.........................................................Global Constants...............................................
-ERROR_THRESHOLD = 0.1 # [deg]
-#.....................................................End of Global Constants............................................
 
 #......................................................Callback Functions ...............................................   
 def SpeedCallback(msg): # Read the pose of the mattro
@@ -42,9 +39,31 @@ def SpeedCallback(msg): # Read the pose of the mattro
 #...................................................End of Callback Functions ...........................................
 
 #...................................................User-defined Functions ..............................................
+def quaternion_from_euler(roll, pitch, yaw):
+  """
+  Convert an Euler angle to a quaternion.
+   
+  Input
+    :param roll: The roll (rotation around x-axis) angle in radians.
+    :param pitch: The pitch (rotation around y-axis) angle in radians.
+    :param yaw: The yaw (rotation around z-axis) angle in radians.
+ 
+  Output
+    :return qx, qy, qz, qw: The orientation in quaternion [x,y,z,w] format
+  """
+  qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+  qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
+  qz = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
+  qw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+ 
+  return [qx, qy, qz, qw]
+
 def compute_odometry(loop_rate, wheel_space):
     global v_r, v_l
-    print("ComputeOdometryNode: up and running")
+    print("MattroTwistNode: up and running")
+
+    odomMattro = Odometry()
+    seq_int = 0
 
     X = 0.0
     Y = 0.0
@@ -58,8 +77,37 @@ def compute_odometry(loop_rate, wheel_space):
         X = X + v * np.cos(theta) * dt
         Y = Y + v * np.sin(theta) * dt
         theta = theta + omega * dt
+        
+        odomMattro.header.seq = seq_int
+        odomMattro.header.frame_id = "world"
+        odomMattro.header.stamp = rospy.Time.now()
 
-        print("X: ", X, " Y: ", Y, " theta: ", theta, end = "\r")
+        odomMattro.child_frame_id = "mattro_base_link"
+        
+        odomMattro.pose.pose.position.x = X + v * np.cos(theta) * dt
+        odomMattro.pose.pose.position.y = Y + v * np.sin(theta) * dt
+        odomMattro.pose.pose.position.z = 0.600
+
+        quat = quaternion_from_euler(0.0, 0.0, theta + omega * dt)
+        odomMattro.pose.pose.orientation.x = quat[0]
+        odomMattro.pose.pose.orientation.y = quat[1]
+        odomMattro.pose.pose.orientation.z = quat[2]
+        odomMattro.pose.pose.orientation.w = quat[3]
+
+        odomMattro.pose.covariance = [1,0,0,0,0,0, 0,1,0,0,0,0, 0,0,1,0,0,0, 0,0,0,1,0,0, 0,0,0,0,1,0, 0,0,0,0,0,1]
+
+        odomMattro.twist.twist.linear.x = v
+        odomMattro.twist.twist.linear.y = 0.0
+        odomMattro.twist.twist.linear.z = 0.0
+        odomMattro.twist.twist.angular.x = 0.0
+        odomMattro.twist.twist.angular.y = 0.0
+        odomMattro.twist.twist.angular.z = omega
+        
+        odomMattro.twist.covariance = [1,0,0,0,0,0, 0,1,0,0,0,0, 0,0,1,0,0,0, 0,0,0,1,0,0, 0,0,0,0,1,0, 0,0,0,0,0,1]
+
+        pub1.publish(odomMattro)
+
+        seq_int = seq_int + 1
 
         loop_rate.sleep()
 
@@ -83,6 +131,7 @@ if __name__ == '__main__':
 
         # Define ROS publishers and Subscribers
         sub1 = rospy.Subscriber("/mattro/bock_status", BockStatus, SpeedCallback)
+        pub1 = rospy.Publisher("/mattro/odom", Odometry, queue_size = 10)
         
         compute_odometry(loop_rate, wheel_space)
 

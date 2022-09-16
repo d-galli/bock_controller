@@ -13,7 +13,7 @@
     <node pkg="bock_controller" type="mattro_tf.py" name="MattroTf" output="screen"/>
     <node pkg="bock_controller" type="world_tf.py" name="WorldTf" output="screen"/>
 
-    <!-- Run the node which publish Mattro's pose ins space -->
-    <node pkg="bock_controller" type="mattro_pose.py" name="MattroPose" output="screen"/>
+    <!-- Run the node which publish Mattro's pose in space using odometry-->
+    <node pkg="bock_controller" type="mattro_odom.py" name="MattroOdom" output="screen"/>
     
 </launch>

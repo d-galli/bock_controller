@@ -20,7 +20,6 @@
 # Outputs [publishers]: /mattro/orientation
 #                  
 #...........................................Included Libraries and Message Types.........................................
-from turtle import pos
 import rospy
 
 import numpy as np

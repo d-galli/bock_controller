@@ -16,7 +16,6 @@
         <rosparam command="load" file="$(find xsens_mti_driver)/param/xsens_mti_node.yaml" />
     </node>
 
-    <!-- Run the node which convert quaternion into Euler angles -->
 
      <!-- Run the tf broadcasters nodes -->
     <node pkg="bock_controller" type="controlbox_tf.py" name="ControlBoxTf" output="screen"/>

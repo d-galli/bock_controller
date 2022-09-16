@@ -1,0 +1,16 @@
+<launch>
+    <!-- This is the format for a comment in HTML --> 
+
+    <!-- Run the node that computes the filtered odometry -->
+    <node pkg="robot_localization" type="ekf_localization_node" name="ekf_se" clear_params="true">
+        <rosparam command="load" file="$(find bock_controller)/config/efk_bock.yaml" />
+    </node>
+
+    <!-- Run the node which publishes Mattro's odometry -->
+    <node pkg="bock_controller" type="mattro_odom.py" name="MattroOdom" output="screen"/>
+
+     <!-- Run the tf broadcasters nodes -->
+    <node pkg="bock_controller" type="controlbox_tf.py" name="ControlBoxTf" output="screen"/>
+    <node pkg="bock_controller" type="mattro_tf.py" name="MattroTf" output="screen"/>
+    
+</launch>
