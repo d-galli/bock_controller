@@ -20,12 +20,19 @@
 #                       messages over CAN
 #...........................................Included Libraries and Message Types.........................................
 import rospy
+import math
 import can
 #from can import Message
 from bock_controller.msg import BockStatus
 #...........................................End of Included Libraries and Message Types..................................
  
 #...................................................User-defined Functions ..............................................
+def twos_comp(val, bits):
+    """compute the 2's complement of int value val"""
+    if (val & (1 << (bits - 1))) != 0:          # if sign bit is set e.g., 8bit: 128-255
+        val = val - (1 << bits)                 # compute negative value
+    return ((val * 0.35 * math.pi)/(16 * 60))    # return positive value as is
+
 def read_can():
     
     bock_can = can.interface.Bus(channel = 'can0', bustype = 'socketcan') #socketcan_ctypes
@@ -49,12 +56,17 @@ def read_can():
             status_msg.state_of_charge = ((can_msg.data[7]<<8) + can_msg.data[6])/10.
         
         elif can_msg.arbitration_id == 0x315:
-            status_msg.speed_left = (can_msg.data[3]<<24) + (can_msg.data[2]<<16) + (can_msg.data[1]<<8) + can_msg.data[0]
-            status_msg.speed_right = (can_msg.data[7]<<24) + (can_msg.data[6]<<16) + (can_msg.data[5]<<8) + can_msg.data[4]
+
+            hex_msg = can_msg.data.hex()
+
+            left_hex_string = hex_msg[6:8] + hex_msg[4:6] + hex_msg[2:4] + hex_msg[:2]
+            right_hex_string = hex_msg[14:16] + hex_msg[12:14] + hex_msg[10:12] + hex_msg[8:10]
+
+            status_msg.speed_left = -(twos_comp(int(left_hex_string,16), 32))
+            status_msg.speed_right = twos_comp(int(right_hex_string,16), 32)
 
         status_msg.running_read = True
         status_msg.state = 3
-
         # Publish the ROS message
         pub1.publish(status_msg)
 
