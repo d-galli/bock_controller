@@ -57,7 +57,7 @@ def PozyxCallback(msg): # Read data fom Pozyx
     global position
     
     position[0] = msg.position.x
-    position[1] = msg.positon.y
+    position[1] = msg.position.y
     position[2] = msg.position.z
 #...................................................End of Callback Functions ...........................................
 
