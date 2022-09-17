@@ -1,5 +1,6 @@
 <launch>
-    <!-- This is the format for a comment in HTML --> 
+    <!-- This lunch file is aimed to execute only the ROS nodes which allow the communication over CAN bus
+    between the Mattro Rovo 2 and the Jetson or any other control board --> 
 
 
     <!-- Run the node which convert Twist messages to target wheel speeds and publish them over CAN -->

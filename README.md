@@ -211,15 +211,31 @@ roslaunch bock_controller bock_pose.launch
 roslaunch bock_controller bock_navigation.launch
 ```
 
-4. To visualise in rviz the robot from the Jetson, run the following in a terminal:
+4. To test the odometry filterd, run the following in a terminal:
 ```
-roslaunch bock_controller bock_display.launch
+roslaunch bock_controller bock_odom_filtered.launch
 ```
 
 If *bock_navigation* or  *bock_pose* is already running and you want to visualise the robot from your local PC, run the following in a terminal:
 ```
-roslaunch bock_controller bock_display_remote.launch
+roslaunch bock_controller bock_display.launch
 ```
+!! Keep in mind that there must be a display available, since rviz is a software with a graphical interface. Hence, it is not possible to run it on Jetson whenever it is not attached to an external monitor.
+
+## Dependencies
+
+To work properly, the ROS controller exploits third parties ROS packages that must be clone in the *src* folder of the ROS workspace. Those are reported in the references and can be easily installed as follows.
+
+First of all, open a terminal and move into *my_ros_workspace/src* folder.
+
+To install the *robot_localization* package, run:
+
+```
+git clone -b melodic-devel https://github.com/cra-ros-pkg/robot_localization.git
+```
+
+To install the *xsens_ros_mti_driver* package, follow the isntructions reported [here](http://wiki.ros.org/xsens_mti_driver).
+
 
 ## References
 
@@ -228,3 +244,5 @@ roslaunch bock_controller bock_display_remote.launch
 - [Nvidia forum 1](https://devtalk.nvidia.com/default/topic/1025010/jetson-tx2/how-to-use-can-on-jetson-tx2-/)
 - [Nivida forum 2](https://devtalk.nvidia.com/default/topic/1006762/jetson-tx2/how-can-i-use-can-bus-in-tx2-/3)
 - [SG Framework](https://sgframework.readthedocs.io/en/latest/cantutorial.html)
+- [Xsense ROS node](https://github.com/xsens/xsens_mti_ros_node)
+- [Robot Localization ROS package](https://github.com/cra-ros-pkg/robot_localization)

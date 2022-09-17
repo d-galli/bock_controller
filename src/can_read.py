@@ -2,13 +2,13 @@
 
 # Filename:                     can_read.py
 # Creation Date:                20/04/2022
-# Last Revision Date:           28/05/2022
+# Last Revision Date:           16/09/2022
 # Author(s) [email]:			Davide Galli [dgalli@unibz.it]
 # Revisor(s) {Date}:        	
 # Organization/Institution:	    Free Univerisity of Bozen/Bolzano
-# Status:                       Up and Ready
+# Status:                       Up and Running
 # Notes:                        
-
+#
 #.............................................About can_read.py.....................................................
 # This code is aimed to connect the ROS network and the CAN network. It reads the data transmitted over CAN and publishes
 # some information about robot's status over the topic "/mattro/bock_status".
@@ -22,7 +22,6 @@
 import rospy
 import math
 import can
-#from can import Message
 from bock_controller.msg import BockStatus
 #...........................................End of Included Libraries and Message Types..................................
  

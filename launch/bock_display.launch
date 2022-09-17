@@ -1,24 +1,19 @@
 <launch>
-    <!-- This is the format for a comment in HTML -->
+    <!-- This is launch file is aimed to run Rviz on the remote PC where a display is available.
+    Otherwise it raises an error and stops executing -->
 
     <!-- Load the urdf model as argument -->
     <arg name="model" default="$(find bock_controller)/urdf/Mattro_heavy_duty.urdf"/>
     <arg name="rvizconfig" default="$(find bock_controller)/rviz/display.rviz" /> 
 
-    <!-- Run the node of the IMU X-Sens 650 -->
-    <node  name="xsens_mti_node" pkg="xsens_mti_driver" type="xsens_mti_node" output="screen">
-        <rosparam command="load" file="$(find xsens_mti_driver)/param/xsens_mti_node.yaml" />
-    </node>
-
-    <!-- Run the node which convert quaternion into Euler angles -->
-
-     <!-- Run the tf broadcasters nodes -->
-    <node pkg="bock_controller" type="controlbox_tf.py" name="ControlBoxTf" output="screen"/>
+    <!-- Run the tf broadcasters nodes -->
+    
     <node pkg="bock_controller" type="mattro_tf.py" name="MattroTf" output="screen"/>
-     <node pkg="bock_controller" type="world_tf.py" name="WorldTf" output="screen"/>
+    <node pkg="bock_controller" type="controlbox_tf.py" name="ControlBoxTf" output="screen"/>
+    <node pkg="bock_controller" type="odom_tf.py" name="OdomTf" output="screen"/>
 
     <!-- Run the node which publish Mattro's pose ins space -->
-    <node pkg="bock_controller" type="mattro_pose.py" name="MattroPose" output="screen"/>
+    <!-- node pkg="bock_controller" type="mattro_odom.py" name="MattroPose" output="screen"/-->
 
     <!-- Open Rviz to visualise the robot -->
     <param name="robot_description" command="$(find xacro)/xacro --inorder $(arg model)" />

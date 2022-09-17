@@ -8,7 +8,7 @@
 # Organization/Institution:	    Free Univerisity of Bozen/Bolzano
 # Status:                       Up and Running
 # Notes:
-
+#
 #.............................................About can_write.py.....................................................
 # This is a rough implementation of the python scripts written by Carabin, simply converted as ROS node
 # to control the motors' drivers.
@@ -37,16 +37,7 @@ dr = 0.0
 state = 0
 #.....................................................End of Global Variables............................................
 
-#......................................................Callback Functions ...............................................   
-#def BockStatusCallback(status_msg):
-#    global speed_left_target, speed_right_target, gear_target, state
-
-    #speed_left_target = status_msg.speed_left_target
-    #speed_right_target = status_msg.speed_right_target
-    #gear_target = status_msg.gear_target
-
-    #state = status_msg.state
-
+#......................................................Callback Functions ...............................................
 def TwistCallback(msg): # Read data form /mattro/cmd_vel
     global dx, dr
     
@@ -143,7 +134,6 @@ if __name__ == '__main__':
         wheel_space = rospy.get_param("~base_width", 0.644)
 
         # Define ROS publishers and Subscribers
-        #sub1 = rospy.Subscriber("/mattro/bock_status", BockStatus, BockStatusCallback)
         sub2 = rospy.Subscriber("/mattro/cmd_vel", Twist, TwistCallback)
         
         bock_control(loop_rate, wheel_space)

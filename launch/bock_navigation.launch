@@ -1,5 +1,6 @@
 <launch>
-    <!-- This is the format for a comment in HTML --> 
+    <!-- This launch file is aimed to set up the whole systems ready to navigate. It runs both the nodes necessary to
+    communicate over CAN, as well as the nodes to compute Mattro's pose in space thanks to odometry and IMU --> 
 
 
     <!-- Run the node which convert Twist messages to target wheel speeds and publish them over CAN -->
@@ -16,6 +17,8 @@
         <rosparam command="load" file="$(find xsens_mti_driver)/param/xsens_mti_node.yaml" />
     </node>
 
+    <!-- Run the node which publish Mattro's pose in space using odometry-->
+    <node pkg="bock_controller" type="mattro_odom.py" name="MattroOdom" output="screen"/>
 
      <!-- Run the tf broadcasters nodes -->
     <node pkg="bock_controller" type="controlbox_tf.py" name="ControlBoxTf" output="screen"/>

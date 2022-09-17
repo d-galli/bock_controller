@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Filename:                     mattro_pose.py
+# Filename:                     pozyx_read.py
 # Creation Date:                04/07/2022
 # Last Revision Date:           04/07/2022
 # Author(s) [email]:			Davide Galli [dgalli@unibz.it]
@@ -8,27 +8,21 @@
 # Organization/Institution:	    Free Univerisity of Bozen/Bolzano
 # Status:                       To be tested
 # Notes:                        
-
+#
 #.............................................About can_read.py.....................................................
-# This code is aimed to read the data from the IMU and adapt them according to the robot set up. Then, this information
-# are publihed over the topic "/mattro/orientation".
+# This code is aimed to read the data published by the Pozyx system and combine them in a propaer way, so that the 
+# robot_localzation package is able to use them in the Extended Kalman Filter.
 #
 #
-# Inputs [subscribers]: /filtered/quaternions
-#                       /zyx
+# Inputs [subscribers]: /zyx
 #                       
-# Outputs [publishers]: /mattro/orientation
+# Outputs [publishers]: /mattro/pozyx
 #                  
 #...........................................Included Libraries and Message Types.........................................
 import rospy
-
 import numpy as np
-
-from geometry_msgs.msg import QuaternionStamped
-from geometry_msgs.msg import TwistStamped
+from geometry_msgs.msg import PoseWithCovarianceStamped
 from geometry_msgs.msg import Pose
-
-
 #...........................................End of Included Libraries and Message Types..................................
 
 #.........................................................Global Variables...............................................
@@ -40,18 +34,6 @@ position = np.zeros(3)
 #.....................................................End of Global Variables............................................
  
 #......................................................Callback Functions ...............................................   
-def ImuCallback(msg): # Read data from the IMU
-    global quat, header_info
-    
-    header_info[0] = msg.header.seq
-    header_info[1] = msg.header.stamp
-    header_info[2] = "mattro_bock"
-
-    quat[0] = msg.quaternion.x
-    quat[1] = msg.quaternion.y
-    quat[2] = msg.quaternion.z
-    quat[3] = msg.quaternion.w
-
 def PozyxCallback(msg): # Read data fom Pozyx
     global position
     
@@ -61,57 +43,42 @@ def PozyxCallback(msg): # Read data fom Pozyx
 #...................................................End of Callback Functions ...........................................
 
 #...................................................User-defined Functions ..............................................
-def Quaternion2Euler(quat):
-
-    x = quat[0]
-    y = quat[1]
-    z = quat[2]
-    w = quat[3]
-
-    ysqr = y * y
-
-    t0 = +2.0 * (w * x + y * z)
-    t1 = +1.0 - 2.0 * (x * x + ysqr)
-    X = np.degrees(np.arctan2(t0, t1))
-
-    t2 = +2.0 * (w * y - z * x)
-    t2 = np.where(t2>+1.0,+1.0,t2)
-    #t2 = +1.0 if t2 > +1.0 else t2
-
-    t2 = np.where(t2<-1.0, -1.0, t2)
-    #t2 = -1.0 if t2 < -1.0 else t2
-    Y = np.degrees(np.arcsin(t2))
-
-    t3 = +2.0 * (w * z + x * y)
-    t4 = +1.0 - 2.0 * (ysqr + z * z)
-    Z = np.degrees(np.arctan2(t3, t4))
-
-    euler = np.array([X, Y, Z])
-    
-    return euler
+def quaternion_from_euler(roll, pitch, yaw):   # Convert Euler angles to quaternions
+  qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+  qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
+  qz = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
+  qw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+ 
+  return [qx, qy, qz, qw]
 
 def publish_pose():
     global header_info, quat, position
-    print("IMUDataNode: up and running")
+    print("PozyxDataNode: up and running")
 
-    # Create a Pose message
-    pose_msg = TwistStamped()
+    # Create a PoseWithCovarianceStamped message
+    pose_msg = PoseWithCovarianceStamped()
+    seq_int = 0
     
     while not rospy.is_shutdown():
 
-        eul = Quaternion2Euler(quat)
-        
-        pose_msg.header.seq = header_info[0]
-        pose_msg.header.stamp = header_info[1]
-        pose_msg.header.frame_id = header_info[2]
+        pose_msg.header.seq = seq_int
+        pose_msg.header.frame_id = "world_pozyx"
+        pose_msg.header.stamp = rospy.Time.now()
 
-        pose_msg.twist.linear.x = position[0]
-        pose_msg.twist.linear.y = position[1]
-        pose_msg.twist.linear.z = position[2]
+        pose_msg.child_frame_id = "mattro_base_link"       
 
-        pose_msg.twist.angular.x = eul[0]
-        pose_msg.twist.angular.y = eul[1]
-        pose_msg.twist.angular.z = eul[2]
+        pose_msg.pose.pose.position.x = position[0]
+        pose_msg.pose.pose.position.y = position[1]
+        pose_msg.pose.pose.position.z = position[2]
+
+        quat = quaternion_from_euler(0.0, 0.0, 0.0)
+
+        pose_msg.pose.pose.orientation.x = quat[0]
+        pose_msg.pose.pose.orientation.x = quat[1]
+        pose_msg.pose.pose.orientation.x = quat[2]
+        pose_msg.pose.pose.orientation.x = quat[3]
+
+        pose_msg.pose.covariance = [1,0,0,0,0,0, 0,1,0,0,0,0, 0,0,1,0,0,0, 0,0,0,1,0,0, 0,0,0,0,1,0, 0,0,0,0,0,1]
 
         # Publish the ROS message
         pub1.publish(pose_msg)
@@ -129,9 +96,8 @@ if __name__ == '__main__':
         loop_rate = rospy.Rate(nodeRate)
 
         # Define ROS publishers and Subscribers
-        sub1 = rospy.Subscriber("/filter/quaternion", QuaternionStamped, ImuCallback)
         sub2 = rospy.Subscriber("/zyx", Pose, PozyxCallback)
-        pub1 = rospy.Publisher("/mattro/pose", TwistStamped, queue_size = 10)
+        pub1 = rospy.Publisher("/mattro/pozyx", PoseWithCovarianceStamped, queue_size = 10)
         
         publish_pose()
 

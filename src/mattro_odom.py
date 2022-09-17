@@ -1,22 +1,21 @@
 #!/usr/bin/env python3
 
-# Filename:                     mattro_navigation_test.py
-# Creation Date:                11/08/2022
-# Last Revision Date:           11/08/2022
+# Filename:                     mattro_odom.py
+# Creation Date:                16/09/2022
+# Last Revision Date:           17/09/2022
 # Author(s) [email]:			Davide Galli [dgalli@unibz.it]
 # Revisor(s) {Date}:        	
 # Organization/Institution:	    Free Univerisity of Bozen/Bolzano
 # Status:                       To be tested
 # Notes:                        
-
+#
 #.............................................About can_read.py.....................................................
-# This code is aimed to make the mattro rovo 2 move along a squared shaped path by means of data from the pozyx 
-# system and the IMU.
+# This code is aimed to compute a simple odometry based on the feeback from the motors' encoders.
 #
 #
-# Inputs [subscribers]: /mattro/pose
+# Inputs [subscribers]: /mattro/bock_status
 #                       
-# Outputs [publishers]: /mattro/cmd_vel
+# Outputs [publishers]: /mattro/odometry
 #                  
 #...........................................Included Libraries and Message Types.........................................
 import rospy
@@ -39,18 +38,7 @@ def SpeedCallback(msg): # Read the pose of the mattro
 #...................................................End of Callback Functions ...........................................
 
 #...................................................User-defined Functions ..............................................
-def quaternion_from_euler(roll, pitch, yaw):
-  """
-  Convert an Euler angle to a quaternion.
-   
-  Input
-    :param roll: The roll (rotation around x-axis) angle in radians.
-    :param pitch: The pitch (rotation around y-axis) angle in radians.
-    :param yaw: The yaw (rotation around z-axis) angle in radians.
- 
-  Output
-    :return qx, qy, qz, qw: The orientation in quaternion [x,y,z,w] format
-  """
+def quaternion_from_euler(roll, pitch, yaw):  # Convert Euler angles to quaternions
   qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
   qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
   qz = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
@@ -60,7 +48,7 @@ def quaternion_from_euler(roll, pitch, yaw):
 
 def compute_odometry(loop_rate, wheel_space):
     global v_r, v_l
-    print("MattroTwistNode: up and running")
+    print("MattroOdomNode: up and running")
 
     odomMattro = Odometry()
     seq_int = 0
@@ -122,7 +110,7 @@ if __name__ == '__main__':
 
     try:
         print("Try running node")
-        rospy.init_node('mattro_twist', anonymous=True)
+        rospy.init_node('mattro_odom', anonymous=True)
 
         # Read the parameters from the launch file
         rate = rospy.get_param("~rate", 10)
