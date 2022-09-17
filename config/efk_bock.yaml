@@ -12,14 +12,14 @@ publish_tf: false
 publish_acceleration: false
 
 
-map_frame: world              
-odom_frame: odom            
+map_frame: map           
+odom_frame: mattro_odom            
 base_link_frame: mattro_base_link  
-world_frame: odom           
+world_frame: mattro_odom           
 
 # Mattro built-in odometry
 odom0: /mattro/odom
-odom0_config: [true,  true,  false,
+odom0_config: [true,  true,  true,
                false, false, false,
                false, false, false,
                false, false, true,
@@ -60,7 +60,7 @@ pose0_queue_size: 10
 pose0_rejection_threshold: 2  # Note the difference in parameter name
 pose0_nodelay: false
 
-use_control: true
+use_control: false
 stamped_control: false
 control_timeout: 0.2
 control_config: [true, false, false, false, false, true]
