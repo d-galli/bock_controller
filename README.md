@@ -246,4 +246,4 @@ To install the *xsens_ros_mti_driver* package, follow the isntructions reported 
 - [SG Framework](https://sgframework.readthedocs.io/en/latest/cantutorial.html)
 - [Xsense ROS node](https://github.com/xsens/xsens_mti_ros_node)
 - [Robot Localization ROS package](https://github.com/cra-ros-pkg/robot_localization)
-- [REP 105](https://www.ros.org/reps/rep-0105.html)
+- [Coordinate Frames for Mobile Platforms](https://www.ros.org/reps/rep-0105.html)
