@@ -222,6 +222,13 @@ roslaunch bock_controller bock_display.launch
 ```
 !! Keep in mind that there must be a display available, since rviz is a software with a graphical interface. Hence, it is not possible to run it on Jetson whenever it is not attached to an external monitor.
 
+## Square path demo
+
+To execute the demo, run in a terminal:
+```
+roslaunch bock_controller bock_demo_square.launch
+```
+
 ## Dependencies
 
 To work properly, the ROS controller exploits third parties ROS packages that must be clone in the *src* folder of the ROS workspace. Those are reported in the references and can be easily installed as follows.
