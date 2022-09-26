@@ -6,7 +6,7 @@
 # Author(s) [email]:			Davide Galli [dgalli@unibz.it]
 # Revisor(s) {Date}:        	
 # Organization/Institution:	    Free Univerisity of Bozen/Bolzano
-# Status:                       To be tested
+# Status:                       Up and Running
 # Notes:                        
 #
 #.............................................About can_read.py.....................................................

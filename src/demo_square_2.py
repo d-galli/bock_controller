@@ -14,6 +14,7 @@
 #
 #
 # Inputs [subscribers]: /filter/quaternion
+#                       /mattro/odom
 #                       
 # Outputs [publishers]: /mattro/cmd_vel
 #                  
@@ -22,17 +23,18 @@ import rospy
 import numpy as np
 from geometry_msgs.msg import QuaternionStamped
 from geometry_msgs.msg import Twist
+from nav_msgs.msg import Odometry
 from simple_pid import PID
 #...........................................End of Included Libraries and Message Types..................................
 
 #.........................................................Global Variables...............................................
 quat = np.zeros(4)
+robot_position = np.zeros(2)
 #.....................................................End of Global Variables............................................
 
 #.........................................................Global Constants...............................................
-ERROR_THRESHOLD = 0.1 # [deg]
-LONG_EDGE = 200
-SHORT_EDGE = 40
+ERROR_THRESHOLD = 0.2 # [deg]
+LENGTH_EDGE = 2.0 # [m]
 #.....................................................End of Global Constants............................................
 
 #......................................................Callback Functions ...............................................   
@@ -43,6 +45,12 @@ def ImuCallback(msg): # Read data from the IMU
     quat[1] = msg.quaternion.y
     quat[2] = msg.quaternion.z
     quat[3] = msg.quaternion.w
+
+def OdometryCallback(msg):
+    global robot_position
+
+    robot_position[0] = msg.pose.pose.position.x
+    robot_position[1] = msg.pose.pose.position.y
 #...................................................End of Callback Functions ...........................................
 
 #...................................................User-defined Functions ..............................................
@@ -76,7 +84,7 @@ def Quaternion2Euler(quat):
     return euler
 
 def mattro_square(loop_rate):
-    global header_info, quat
+    global header_info, quat, robot_position
     print("DemoSquareNode: up and running")
 
     # Create a Twist message
@@ -85,13 +93,30 @@ def mattro_square(loop_rate):
     pid = PID(0.6, 0.08, 0.2) # 0.5 0.5 0.1
 
     state = 0
-    count = 0
+    distance = 0.0
 
     while not rospy.is_shutdown():
 
         euler = Quaternion2Euler(quat)
+        
         if state == 0:
-            if count <= LONG_EDGE:
+            x_start = robot_position[0]
+            y_start = robot_position[1]
+            start = np.array((x_start, y_start))
+            #print("Starting X: ", x_start, " Starting Y: ", y_start)
+            rospy.sleep(0.5)
+            state = 1
+        
+        if state == 1:
+            x_current = robot_position[0]
+            y_current = robot_position[1]
+            current = np.array((x_current, y_current))
+
+            #print("Current position: ", current)
+            distance = np.linalg.norm(current - start)
+            print("Distance:", distance, end = "\r")
+
+            if distance <= LENGTH_EDGE:
                 cmd_vel_msg.linear.x = 0.2
                 cmd_vel_msg.linear.y = 0.0
                 cmd_vel_msg.linear.z = 0.0  
@@ -99,14 +124,11 @@ def mattro_square(loop_rate):
                 cmd_vel_msg.angular.x = 0.0
                 cmd_vel_msg.angular.y = 0.0
                 cmd_vel_msg.angular.z = 0.0
-                print("Moving forward ...", end = "\r")
-                count += 1
 
             else:     
-                state = 1
-                count = 0
+                state = 2
 
-        if state == 1:
+        if state == 2:
             target_angle = euler[2] - 90 # [deg]
             if target_angle >= 180:
                 target_angle -= 360
@@ -117,27 +139,37 @@ def mattro_square(loop_rate):
             pid.setpoint = target_angle
             pid.output_limits = (- 0.3, + 0.3)    # Output value will be between -0.3 and +0.3 [rad/s]
 
-            state = 2
-        
-        if state == 2:
-
-            current_angle = euler[2]
-            error = np.abs(target_angle - current_angle)
-            
-            if error <= ERROR_THRESHOLD:
-                state = 3
-            print("Current Yaw: ", current_angle, "Current Error: ", error, end = "\r")
-
-            cmd_vel_msg.linear.x = 0.0
-            cmd_vel_msg.linear.y = 0.0
-            cmd_vel_msg.linear.z = 0.0
-
-            cmd_vel_msg.angular.x = 0.0
-            cmd_vel_msg.angular.y = 0.0
-            cmd_vel_msg.angular.z = pid(current_angle)
+            state = 3
         
         if state == 3:
-            if count <= SHORT_EDGE:
+
+            current_angle = euler[2]
+            error = np.abs(target_angle - current_angle)
+            
+            if error <= ERROR_THRESHOLD:
+                x_start = robot_position[0]
+                y_start = robot_position[1]
+                start = np.array((x_start, y_start))
+                state = 4
+            print("Current Yaw: ", current_angle, "Current Error: ", error, end = "\r")
+
+            cmd_vel_msg.linear.x = 0.0
+            cmd_vel_msg.linear.y = 0.0
+            cmd_vel_msg.linear.z = 0.0
+
+            cmd_vel_msg.angular.x = 0.0
+            cmd_vel_msg.angular.y = 0.0
+            cmd_vel_msg.angular.z = pid(current_angle)
+        
+        if state == 4:
+            x_current = robot_position[0]
+            y_current = robot_position[1]
+            current = np.array((x_current, y_current))
+
+            #print("Current position: ", current)
+            distance = np.linalg.norm(current - start)
+            print("Distance:", distance, end = "\r")
+            if  distance <= LENGTH_EDGE:
                 cmd_vel_msg.linear.x = 0.2
                 cmd_vel_msg.linear.y = 0.0
                 cmd_vel_msg.linear.z = 0.0
@@ -145,13 +177,11 @@ def mattro_square(loop_rate):
                 cmd_vel_msg.angular.x = 0.0
                 cmd_vel_msg.angular.y = 0.0
                 cmd_vel_msg.angular.z = 0.0
-                print("Moving forward ...", end = "\r")
-                count += 1
+                #print("Moving forward ...", end = "\r")
             else:
-                state = 4
-                count = 0
+                state = 5
 
-        if state == 4:
+        if state == 5:
             target_angle = target_angle - 90 # [deg]
             if target_angle >= 180:
                 target_angle -= 360
@@ -162,27 +192,39 @@ def mattro_square(loop_rate):
             pid.setpoint = target_angle
             pid.output_limits = (- 0.3, + 0.3)    # Output value will be between -0.3 and +0.3 [rad/s]
 
-            state = 5
-        
-        if state == 5:
-
-            current_angle = euler[2]
-            error = np.abs(target_angle - current_angle)
-            
-            if error <= ERROR_THRESHOLD:
-                state = 6
-            print("Current Yaw: ", current_angle, "Current Error: ", error, end = "\r")
-
-            cmd_vel_msg.linear.x = 0.0
-            cmd_vel_msg.linear.y = 0.0
-            cmd_vel_msg.linear.z = 0.0
-
-            cmd_vel_msg.angular.x = 0.0
-            cmd_vel_msg.angular.y = 0.0
-            cmd_vel_msg.angular.z = pid(current_angle)
+            state = 6
         
         if state == 6:
-            if count <= LONG_EDGE:
+
+            current_angle = euler[2]
+            error = np.abs(target_angle - current_angle)
+            
+            if error <= ERROR_THRESHOLD:
+                x_start = robot_position[0]
+                y_start = robot_position[1]
+                start = np.array((x_start, y_start))
+                
+                state = 7
+            
+            print("Current Yaw: ", current_angle, "Current Error: ", error, end = "\r")
+
+            cmd_vel_msg.linear.x = 0.0
+            cmd_vel_msg.linear.y = 0.0
+            cmd_vel_msg.linear.z = 0.0
+
+            cmd_vel_msg.angular.x = 0.0
+            cmd_vel_msg.angular.y = 0.0
+            cmd_vel_msg.angular.z = pid(current_angle)
+        
+        if state == 7:
+            x_current = robot_position[0]
+            y_current = robot_position[1]
+            current = np.array((x_current, y_current))
+
+            #print("Current position: ", current)
+            distance = np.linalg.norm(current - start)
+            print("Distance:", distance, end = "\r")
+            if  distance <= LENGTH_EDGE:
                 cmd_vel_msg.linear.x = 0.2
                 cmd_vel_msg.linear.y = 0.0
                 cmd_vel_msg.linear.z = 0.0
@@ -190,13 +232,11 @@ def mattro_square(loop_rate):
                 cmd_vel_msg.angular.x = 0.0
                 cmd_vel_msg.angular.y = 0.0
                 cmd_vel_msg.angular.z = 0.0
-                print("Moving forward ...", end = "\r")
-                count += 1
+                #print("Moving forward ...", end = "\r")
             else:
-                state = 7
-                count = 0
+                state = 8
 
-        if state == 7:
+        if state == 8:
             target_angle = target_angle - 90 # [deg]
             if target_angle >= 180:
                 target_angle -= 360
@@ -207,27 +247,37 @@ def mattro_square(loop_rate):
             pid.setpoint = target_angle
             pid.output_limits = (- 0.3, + 0.3)    # Output value will be between -0.3 and +0.3 [rad/s]
 
-            state = 8
-        
-        if state == 8:
-
-            current_angle = euler[2]
-            error = np.abs(target_angle - current_angle)
-            
-            if error <= ERROR_THRESHOLD:
-                state = 9
-            print("Current Yaw: ", current_angle, "Current Error: ", error, end = "\r")
-
-            cmd_vel_msg.linear.x = 0.0
-            cmd_vel_msg.linear.y = 0.0
-            cmd_vel_msg.linear.z = 0.0
-
-            cmd_vel_msg.angular.x = 0.0
-            cmd_vel_msg.angular.y = 0.0
-            cmd_vel_msg.angular.z = pid(current_angle)
+            state = 9
         
         if state == 9:
-            if count <= SHORT_EDGE:
+
+            current_angle = euler[2]
+            error = np.abs(target_angle - current_angle)
+            
+            if error <= ERROR_THRESHOLD:
+                x_start = robot_position[0]
+                y_start = robot_position[1]
+                start = np.array((x_start, y_start))
+                state = 10
+            print("Current Yaw: ", current_angle, "Current Error: ", error, end = "\r")
+
+            cmd_vel_msg.linear.x = 0.0
+            cmd_vel_msg.linear.y = 0.0
+            cmd_vel_msg.linear.z = 0.0
+
+            cmd_vel_msg.angular.x = 0.0
+            cmd_vel_msg.angular.y = 0.0
+            cmd_vel_msg.angular.z = pid(current_angle)
+        
+        if state == 10:
+            x_current = robot_position[0]
+            y_current = robot_position[1]
+            current = np.array((x_current, y_current))
+
+            #print("Current position: ", current)
+            distance = np.linalg.norm(current - start)
+            print("Distance:", distance, end = "\r")
+            if  distance <= LENGTH_EDGE:
                 cmd_vel_msg.linear.x = 0.2
                 cmd_vel_msg.linear.y = 0.0
                 cmd_vel_msg.linear.z = 0.0
@@ -235,13 +285,12 @@ def mattro_square(loop_rate):
                 cmd_vel_msg.angular.x = 0.0
                 cmd_vel_msg.angular.y = 0.0
                 cmd_vel_msg.angular.z = 0.0
-                print("Moving forward ...", end = "\r")
-                count += 1
-            else:
-                state = 10
-                count = 0
+                #print("Moving forward ...", end = "\r")
 
-        if state == 10:
+            else:
+                state = 11
+
+        if state == 11:
             target_angle = target_angle - 90 # [deg]
             if target_angle >= 180:
                 target_angle -= 360
@@ -252,15 +301,15 @@ def mattro_square(loop_rate):
             pid.setpoint = target_angle
             pid.output_limits = (- 0.3, + 0.3)    # Output value will be between -0.3 and +0.3 [rad/s]
 
-            state = 11
+            state = 12
         
-        if state == 11:
+        if state == 12:
 
             current_angle = euler[2]
             error = np.abs(target_angle - current_angle)
             
             if error <= ERROR_THRESHOLD:
-                state = 12
+                state = 13
             print("Current Yaw: ", current_angle, "Current Error: ", error, end = "\r")
 
             cmd_vel_msg.linear.x = 0.0
@@ -272,7 +321,7 @@ def mattro_square(loop_rate):
             cmd_vel_msg.angular.z = pid(current_angle)
 
 
-        if state == 12:
+        if state == 13:
             print("Target succesfully reached", end = "\r")
             cmd_vel_msg.linear.x = 0.0
             cmd_vel_msg.linear.y = 0.0
@@ -282,9 +331,15 @@ def mattro_square(loop_rate):
             cmd_vel_msg.angular.y = 0.0
             cmd_vel_msg.angular.z = 0.0
 
-            count = 0
+            x_start = robot_position[0]
+            y_start = robot_position[1]
+            start = np.array((x_start, y_start))
 
+            x_current = robot_position[0]
+            y_current = robot_position[1]
+            current = np.array((x_current, y_current))
 
+            distance = 0.0
         
         # Publish the ROS message
         pub1.publish(cmd_vel_msg)
@@ -306,6 +361,7 @@ if __name__ == '__main__':
 
         # Define ROS publishers and Subscribers
         sub1 = rospy.Subscriber("/filter/quaternion", QuaternionStamped, ImuCallback)
+        sub2 = rospy.Subscriber("/mattro/odom", Odometry, OdometryCallback)
         pub1 = rospy.Publisher("/mattro/cmd_vel", Twist, queue_size = 10)
         
         mattro_square(loop_rate)
