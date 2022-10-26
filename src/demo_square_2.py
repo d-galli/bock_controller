@@ -10,7 +10,8 @@
 # Notes:                        
 
 #.............................................About can_read.py.....................................................
-# This code is aimed to make the mattro rovo 2 rotate of roughly 90 degrees using orientation data from the IMU
+# This code is aimed to make the mattro rovo follow a squared path width an edge lenght of 2 [m]. Position is computed
+# using odoemtry, while the orientation is taken from the IMU.
 #
 #
 # Inputs [subscribers]: /filter/quaternion
